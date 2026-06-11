@@ -194,12 +194,25 @@ function App() {
           setVals(()=>({...SEED,...data.vals}));
           if (data.targets && Object.keys(data.targets).length) setTargets(data.targets);
           setSyncedAt(data.synced_at);
+          // Load history from Supabase; migrate any local-only history if Supabase is empty
+          if (data.history && data.history.length) {
+            setHistory(data.history);
+            localStorage.removeItem('bogat-kpi-history');
+          } else {
+            try {
+              const local = localStorage.getItem('bogat-kpi-history');
+              if (local) {
+                const parsed = JSON.parse(local);
+                if (parsed.length) {
+                  setHistory(parsed);
+                  await db.from('kpi_data').update({history: parsed}).eq('id','bogat');
+                  localStorage.removeItem('bogat-kpi-history');
+                }
+              }
+            } catch {}
+          }
         }
       } catch(e){ console.warn('Supabase:', e.message); }
-      try {
-        const stored = localStorage.getItem('bogat-kpi-history');
-        if (stored) setHistory(JSON.parse(stored));
-      } catch {}
       setLoading(false);
     })();
   },[]);
@@ -213,15 +226,15 @@ function App() {
     try{ await db.from('kpi_data').update({vals:nv}).eq('id','bogat'); }catch{}
   },[vals]);
 
-  const saveSnap = ()=>{
+  const saveSnap = async()=>{
     const label = new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'});
     const active = KPIS.filter(k=>!k.ph&&getT(k.id));
     const score  = active.length ? Math.round(active.reduce((s,k)=>s+Math.min((vals[k.id]||0)/getT(k.id),1),0)/active.length*100) : 0;
     const snap   = {date:label, score, ...Object.fromEntries(KPIS.map(k=>[k.id,vals[k.id]||0]))};
     const nh     = [...history.filter(h=>h.date!==label), snap].slice(-52);
     setHistory(nh);
-    localStorage.setItem('bogat-kpi-history', JSON.stringify(nh));
     setSnapMsg('SAVED'); setTimeout(()=>setSnapMsg(''),2500);
+    try { await db.from('kpi_data').update({history: nh}).eq('id','bogat'); } catch {}
   };
 
   const analyzeWithAI = async()=>{
