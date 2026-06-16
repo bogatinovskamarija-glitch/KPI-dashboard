@@ -23,7 +23,19 @@
   </style>
 </head>
 <body>
-<div id="root"></div>
+<div id="root"><p id="boot-msg" style="color:#EDE8DE;padding:40px;font-family:monospace">Loading dashboard...</p></div>
+<script>
+window.onerror = function(msg, src, line, col, err) {
+  document.getElementById('root').innerHTML = '<pre style="color:red;padding:20px;font-size:12px;white-space:pre-wrap">ERROR: ' + msg + '
+File: ' + src + '
+Line: ' + line + '
+' + (err && err.stack ? err.stack : '') + '</pre>';
+  return true;
+};
+window.addEventListener('unhandledrejection', function(e) {
+  document.getElementById('root').innerHTML += '<pre style="color:orange;padding:20px;font-size:12px">PROMISE REJECTION: ' + (e.reason && e.reason.message ? e.reason.message : String(e.reason)) + '</pre>';
+});
+</script>
 <script type="text/babel" data-presets='[["react",{"runtime":"classic"}]]'>
 const { useState, useEffect, useCallback } = React;
 
