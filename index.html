@@ -703,8 +703,7 @@ Line '+l:'')); return true; };
     catch(e) { show('red','EVAL ERROR',e.message,e.stack); return; }
   }
 
-  if (document.readyState === 'complete') { run(); }
-  else { window.addEventListener('load', run); }
+  setTimeout(run, 2000); // run regardless of CDN load state
 })();
 </script>
 </body>
