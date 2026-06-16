@@ -21,10 +21,14 @@
       body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     }
   </style>
+<script>
+// Synchronous — runs immediately, no events needed
+try { document.getElementById("fb").textContent = "HTML OK — JS RUNNING"; } catch(e) {}
+</script>
 </head>
 <body>
-<div id="root"><p id="boot-msg" style="color:#EDE8DE;padding:30px;font-family:monospace;font-size:13px">Loading...</p></div>
-<script type="text/jsx-source" id="app-source">
+<div id="root"><p id="fb" style="color:#EDE8DE;padding:20px;font-family:monospace">HTML OK — JS blocked or loading</p></div>
+<script type="text/babel" data-presets='[["react",{"runtime":"classic"}]]'>
 const { useState, useEffect, useCallback } = React;
 
 const SB_URL = 'https://btmxozmpzpxisrczlkop.supabase.co';
@@ -676,35 +680,6 @@ function App() {
 }
 
 ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
-</script>
-<script>
-(function() {
-  var root = document.getElementById('root');
-  function show(color, label, msg, stack) {
-    root.innerHTML = '<pre style="color:'+color+';background:#0a0a0a;padding:20px;font-size:11px;white-space:pre-wrap;margin:0">'+label+': '+msg+(stack?'
-
-'+stack.slice(0,600):'')+'</pre>';
-  }
-  window.onerror = function(m,s,l,c,e){ show('red','WINDOW ERROR',m+(e?'
-Line '+l:'')); return true; };
-  window.addEventListener('unhandledrejection',function(e){ show('orange','PROMISE ERROR',String(e.reason&&e.reason.message||e.reason)); });
-
-  function run() {
-    if (typeof Babel === 'undefined') { show('red','ERROR','Babel not loaded - CDN blocked?'); return; }
-    if (typeof React === 'undefined') { show('red','ERROR','React not loaded - CDN blocked?'); return; }
-    if (typeof supabase === 'undefined') { show('red','ERROR','Supabase not loaded - CDN blocked?'); return; }
-    show('#6cf','STATUS','All CDNs loaded. Transforming JSX...','');
-    var jsxSrc = document.getElementById('app-source').textContent;
-    var code;
-    try { code = Babel.transform(jsxSrc, { presets: [['react',{runtime:'classic'}]] }).code; }
-    catch(e) { show('red','BABEL ERROR',e.message,e.stack); return; }
-    show('#6cf','STATUS','JSX compiled. Running app...','');
-    try { eval(code); }
-    catch(e) { show('red','EVAL ERROR',e.message,e.stack); return; }
-  }
-
-  setTimeout(run, 2000); // run regardless of CDN load state
-})();
 </script>
 </body>
 </html>
