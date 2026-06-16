@@ -24,12 +24,12 @@
 </head>
 <body>
 <div id="root"></div>
-<script type="text/jsx-source" id="app-source">
+<script type="text/babel" data-presets='[["react",{"runtime":"classic"}]]'>
 const { useState, useEffect, useCallback } = React;
 
 const SB_URL = 'https://btmxozmpzpxisrczlkop.supabase.co';
 const SB_KEY = 'sb_publishable_bv2-JYq4lde4PzvbIBBcIQ_etwTkf1z';
-const db  = supabase.createClient(SB_URL, SB_KEY);
+const db  = supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession: false, autoRefreshToken: false } });
 const FN  = `${SB_URL}/functions/v1/kpi-analyze`;
 
 const C = {
@@ -676,32 +676,6 @@ function App() {
 }
 
 ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
-</script>
-<script>
-(function() {
-  var rootEl = document.getElementById('root');
-  function showErr(label, msg, stack) {
-    rootEl.innerHTML = '<pre style="color:#ff6b6b;background:#1a0000;padding:20px;font-size:11px;white-space:pre-wrap;margin:0">' + label + ': ' + msg + (stack ? '
-
-' + stack : '') + '</pre>';
-  }
-  function run() {
-    var src = document.getElementById('app-source').textContent;
-    var transformed;
-    try {
-      transformed = Babel.transform(src, { presets: [['react', {runtime: 'classic'}]] }).code;
-    } catch(e) { showErr('BABEL TRANSFORM ERROR', e.message, e.stack); return; }
-    try {
-      eval(transformed);
-    } catch(e) { showErr('EVAL ERROR', e.message, e.stack); return; }
-  }
-  // Wait for all CDN scripts to be ready
-  if (typeof Babel !== 'undefined' && typeof React !== 'undefined' && typeof supabase !== 'undefined') {
-    run();
-  } else {
-    window.addEventListener('load', run);
-  }
-})();
 </script>
 </body>
 </html>
