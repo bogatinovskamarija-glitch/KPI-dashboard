@@ -21,13 +21,9 @@
       body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     }
   </style>
-<script>
-// Synchronous — runs immediately, no events needed
-try { document.getElementById("fb").textContent = "HTML OK — JS RUNNING"; } catch(e) {}
-</script>
 </head>
 <body>
-<div id="root"><p id="fb" style="color:#EDE8DE;padding:20px;font-family:monospace">HTML OK — JS blocked or loading</p></div>
+<div id="root"></div>
 <script type="text/babel" data-presets='[["react",{"runtime":"classic"}]]'>
 const { useState, useEffect, useCallback } = React;
 
