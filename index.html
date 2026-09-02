@@ -8,7 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@100;200;300;400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-  <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.22.5/babel.min.js"></script>
+  
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -24,174 +24,476 @@
 </head>
 <body>
 <div id="root"></div>
-<script type="text/babel" >
-const { useState, useEffect, useCallback } = React;
-
+<script>
+const {
+  useState,
+  useEffect,
+  useCallback
+} = React;
 const SB_URL = 'https://btmxozmpzpxisrczlkop.supabase.co';
 const SB_KEY = 'sb_publishable_bv2-JYq4lde4PzvbIBBcIQ_etwTkf1z';
-const db  = supabase.createClient(SB_URL, SB_KEY);
-const FN  = `${SB_URL}/functions/v1/kpi-analyze`;
-
+const db = supabase.createClient(SB_URL, SB_KEY);
+const FN = `${SB_URL}/functions/v1/kpi-analyze`;
 const C = {
-  bg:'#0D140C', card:'#172017', cardH:'#1C271B',
-  border:'#233222', borderM:'#2E4230',
-  white:'#FFFFFF', whiteDim:'#6B7B6A', whiteFnt:'#0D140C',
-  forest:'#242E22', canopy:'#3B5237',
-  text:'#EDE8DE', sage:'#799875', muted:'#4A5D49',
-  onTrack:'#5B9150', building:'#799875',
-  err:'#C07060',
+  bg: '#0D140C',
+  card: '#172017',
+  cardH: '#1C271B',
+  border: '#233222',
+  borderM: '#2E4230',
+  white: '#FFFFFF',
+  whiteDim: '#6B7B6A',
+  whiteFnt: '#0D140C',
+  forest: '#242E22',
+  canopy: '#3B5237',
+  text: '#EDE8DE',
+  sage: '#799875',
+  muted: '#4A5D49',
+  onTrack: '#5B9150',
+  building: '#799875',
+  err: '#C07060'
 };
 
 // defaultTarget = used when no AI/custom target has been saved to Supabase
-const KPIS = [
-  {id:'yt',         s:'REACH',    label:'YouTube',         sub:'Subscribers',       defaultTarget:1000, deadline:'Month 6 post-license', src:'pf'},
-  {id:'li',         s:'REACH',    label:'LinkedIn',        sub:'Personal followers', defaultTarget:500,  deadline:'Month 4 post-license', src:'pf'},
-  {id:'li_page',    s:'REACH',    label:'LinkedIn Co.',    sub:'Company page',       defaultTarget:500,  deadline:'Year end 2026',        src:'pf'},
-  {id:'ig',         s:'REACH',    label:'Instagram',       sub:'@bogatarchitecture', defaultTarget:2000, deadline:'Year end 2026',        src:'pf'},
-  {id:'fb',         s:'REACH',    label:'Facebook',        sub:'Company page',       defaultTarget:300,  deadline:'Year end 2026',        src:'pf'},
-  {id:'arena_ig',   s:'REACH',    label:'AREna AI',        sub:'Instagram',          defaultTarget:1000, deadline:'Year end 2026',        src:'pf'},
-  {id:'posts_sch',  s:'CONTENT',  label:'Scheduled',       sub:'Posts in queue',     defaultTarget:8,    deadline:'Ongoing',              src:'cu'},
-  {id:'posts_pub',  s:'CONTENT',  label:'Published',       sub:'Total posts',        defaultTarget:250,  deadline:'Year end 2026',        src:'cu'},
-  {id:'blog',       s:'CONTENT',  label:'Blog Posts',      sub:'Articles published', defaultTarget:12,   deadline:'Year end 2026',        src:'cu'},
-  {id:'press',      s:'PIPELINE', label:'Press',           sub:'Mentions published', defaultTarget:3,    deadline:'Year end 2026',        src:'cu'},
-  {id:'leads',      s:'PIPELINE', label:'Leads',           sub:'In pipeline',        defaultTarget:15,   deadline:'Year end 2026',        src:'cu'},
-  {id:'active_proj',s:'PIPELINE', label:'Active Projects', sub:'In progress',        defaultTarget:5,    deadline:'Month 6 post-license', src:'cu'},
-  {id:'convs',      s:'PIPELINE', label:'Conversations',   sub:'Target meetings',    defaultTarget:24,   deadline:'12 wks post-license',  src:'manual'},
-  {id:'portfolio',  s:'PIPELINE', label:'Portfolio',       sub:'Live pieces',        defaultTarget:5,    deadline:'License day',          src:'manual'},
-  {id:'proposals',  s:'PIPELINE', label:'Proposals',       sub:'Sent',               defaultTarget:3,    deadline:'60 days post-license', src:'cu'},
-  {id:'newsletter', s:'OWNED',    label:'Built Different', sub:'Subscribers',        defaultTarget:200,  deadline:'By Issue 6',           src:'manual'},
-  {id:'revenue',    s:'FINANCIAL',label:'Revenue',         sub:'Monthly (USD)',       defaultTarget:null, deadline:null,                   src:'wave', ph:true},
-  {id:'invoices',   s:'FINANCIAL',label:'Outstanding',     sub:'Invoices (USD)',      defaultTarget:null, deadline:null,                   src:'wave', ph:true},
-];
-
+const KPIS = [{
+  id: 'yt',
+  s: 'REACH',
+  label: 'YouTube',
+  sub: 'Subscribers',
+  defaultTarget: 1000,
+  deadline: 'Month 6 post-license',
+  src: 'pf'
+}, {
+  id: 'li',
+  s: 'REACH',
+  label: 'LinkedIn',
+  sub: 'Personal followers',
+  defaultTarget: 500,
+  deadline: 'Month 4 post-license',
+  src: 'pf'
+}, {
+  id: 'li_page',
+  s: 'REACH',
+  label: 'LinkedIn Co.',
+  sub: 'Company page',
+  defaultTarget: 500,
+  deadline: 'Year end 2026',
+  src: 'pf'
+}, {
+  id: 'ig',
+  s: 'REACH',
+  label: 'Instagram',
+  sub: '@bogatarchitecture',
+  defaultTarget: 2000,
+  deadline: 'Year end 2026',
+  src: 'pf'
+}, {
+  id: 'fb',
+  s: 'REACH',
+  label: 'Facebook',
+  sub: 'Company page',
+  defaultTarget: 300,
+  deadline: 'Year end 2026',
+  src: 'pf'
+}, {
+  id: 'arena_ig',
+  s: 'REACH',
+  label: 'AREna AI',
+  sub: 'Instagram',
+  defaultTarget: 1000,
+  deadline: 'Year end 2026',
+  src: 'pf'
+}, {
+  id: 'posts_sch',
+  s: 'CONTENT',
+  label: 'Scheduled',
+  sub: 'Posts in queue',
+  defaultTarget: 8,
+  deadline: 'Ongoing',
+  src: 'cu'
+}, {
+  id: 'posts_pub',
+  s: 'CONTENT',
+  label: 'Published',
+  sub: 'Total posts',
+  defaultTarget: 250,
+  deadline: 'Year end 2026',
+  src: 'cu'
+}, {
+  id: 'blog',
+  s: 'CONTENT',
+  label: 'Blog Posts',
+  sub: 'Articles published',
+  defaultTarget: 12,
+  deadline: 'Year end 2026',
+  src: 'cu'
+}, {
+  id: 'press',
+  s: 'PIPELINE',
+  label: 'Press',
+  sub: 'Mentions published',
+  defaultTarget: 3,
+  deadline: 'Year end 2026',
+  src: 'cu'
+}, {
+  id: 'leads',
+  s: 'PIPELINE',
+  label: 'Leads',
+  sub: 'In pipeline',
+  defaultTarget: 15,
+  deadline: 'Year end 2026',
+  src: 'cu'
+}, {
+  id: 'active_proj',
+  s: 'PIPELINE',
+  label: 'Active Projects',
+  sub: 'In progress',
+  defaultTarget: 5,
+  deadline: 'Month 6 post-license',
+  src: 'cu'
+}, {
+  id: 'convs',
+  s: 'PIPELINE',
+  label: 'Conversations',
+  sub: 'Target meetings',
+  defaultTarget: 24,
+  deadline: '12 wks post-license',
+  src: 'manual'
+}, {
+  id: 'portfolio',
+  s: 'PIPELINE',
+  label: 'Portfolio',
+  sub: 'Live pieces',
+  defaultTarget: 5,
+  deadline: 'License day',
+  src: 'manual'
+}, {
+  id: 'proposals',
+  s: 'PIPELINE',
+  label: 'Proposals',
+  sub: 'Sent',
+  defaultTarget: 3,
+  deadline: '60 days post-license',
+  src: 'cu'
+}, {
+  id: 'newsletter',
+  s: 'OWNED',
+  label: 'Built Different',
+  sub: 'Subscribers',
+  defaultTarget: 200,
+  deadline: 'By Issue 6',
+  src: 'manual'
+}, {
+  id: 'revenue',
+  s: 'FINANCIAL',
+  label: 'Revenue',
+  sub: 'Monthly (USD)',
+  defaultTarget: null,
+  deadline: null,
+  src: 'wave',
+  ph: true
+}, {
+  id: 'invoices',
+  s: 'FINANCIAL',
+  label: 'Outstanding',
+  sub: 'Invoices (USD)',
+  defaultTarget: null,
+  deadline: null,
+  src: 'wave',
+  ph: true
+}];
 const SECS = {
-  REACH:    {label:'REACH',          desc:'Postflow → ClickUp · synced Sundays'},
-  CONTENT:  {label:'CONTENT',        desc:'ClickUp · synced Sundays'},
-  PIPELINE: {label:'PIPELINE',       desc:'ClickUp auto-sync + manual'},
-  OWNED:    {label:'OWNED AUDIENCE', desc:'Manual · click to update'},
-  FINANCIAL:{label:'FINANCIAL',      desc:'Wave API — connect to activate'},
+  REACH: {
+    label: 'REACH',
+    desc: 'Postflow → ClickUp · synced Sundays'
+  },
+  CONTENT: {
+    label: 'CONTENT',
+    desc: 'ClickUp · synced Sundays'
+  },
+  PIPELINE: {
+    label: 'PIPELINE',
+    desc: 'ClickUp auto-sync + manual'
+  },
+  OWNED: {
+    label: 'OWNED AUDIENCE',
+    desc: 'Manual · click to update'
+  },
+  FINANCIAL: {
+    label: 'FINANCIAL',
+    desc: 'Wave API — connect to activate'
+  }
 };
-
 const SEED = {
-  yt:147, li:1273, li_page:370, ig:1231, fb:19, arena_ig:33,
-  posts_sch:11, posts_pub:100, blog:0, press:1, leads:7, active_proj:2,
-  convs:0, portfolio:0, proposals:0, newsletter:0, revenue:0, invoices:0,
+  yt: 147,
+  li: 1273,
+  li_page: 370,
+  ig: 1231,
+  fb: 19,
+  arena_ig: 33,
+  posts_sch: 11,
+  posts_pub: 100,
+  blog: 0,
+  press: 1,
+  leads: 7,
+  active_proj: 2,
+  convs: 0,
+  portfolio: 0,
+  proposals: 0,
+  newsletter: 0,
+  revenue: 0,
+  invoices: 0
 };
-
-const fmt = v => (v||0).toLocaleString('en-US');
-const pct = (v,t) => t ? Math.min(Math.round(v/t*100),100) : null;
-const avg = arr => arr.length ? Math.round(arr.reduce((s,v)=>s+v,0)/arr.length) : 0;
-
+const fmt = v => (v || 0).toLocaleString('en-US');
+const pct = (v, t) => t ? Math.min(Math.round(v / t * 100), 100) : null;
+const avg = arr => arr.length ? Math.round(arr.reduce((s, v) => s + v, 0) / arr.length) : 0;
 function statusOf(v, t) {
   if (!t) return null;
-  const p = v/t;
-  if (p >= 1)   return {label:'ACHIEVED', color:C.white};
-  if (p >= 0.7) return {label:'ON TRACK',  color:C.onTrack};
-  if (p >= 0.3) return {label:'BUILDING',  color:C.building};
-  return             {label:'STARTING',  color:C.muted};
+  const p = v / t;
+  if (p >= 1) return {
+    label: 'ACHIEVED',
+    color: C.white
+  };
+  if (p >= 0.7) return {
+    label: 'ON TRACK',
+    color: C.onTrack
+  };
+  if (p >= 0.3) return {
+    label: 'BUILDING',
+    color: C.building
+  };
+  return {
+    label: 'STARTING',
+    color: C.muted
+  };
 }
-
-const MO = {Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
-const QM = {Jan:'Q1',Feb:'Q1',Mar:'Q1',Apr:'Q2',May:'Q2',Jun:'Q2',Jul:'Q3',Aug:'Q3',Sep:'Q3',Oct:'Q4',Nov:'Q4',Dec:'Q4'};
-
+const MO = {
+  Jan: 0,
+  Feb: 1,
+  Mar: 2,
+  Apr: 3,
+  May: 4,
+  Jun: 5,
+  Jul: 6,
+  Aug: 7,
+  Sep: 8,
+  Oct: 9,
+  Nov: 10,
+  Dec: 11
+};
+const QM = {
+  Jan: 'Q1',
+  Feb: 'Q1',
+  Mar: 'Q1',
+  Apr: 'Q2',
+  May: 'Q2',
+  Jun: 'Q2',
+  Jul: 'Q3',
+  Aug: 'Q3',
+  Sep: 'Q3',
+  Oct: 'Q4',
+  Nov: 'Q4',
+  Dec: 'Q4'
+};
 function buildMonthly(h) {
-  const m={};
-  h.forEach(e=>{const mo=e.date.split(' ')[0];if(!m[mo])m[mo]=[];m[mo].push(e.score);});
-  return Object.keys(m).sort((a,b)=>(MO[a]??0)-(MO[b]??0)).map(mo=>({date:mo,score:avg(m[mo])}));
+  const m = {};
+  h.forEach(e => {
+    const mo = e.date.split(' ')[0];
+    if (!m[mo]) m[mo] = [];
+    m[mo].push(e.score);
+  });
+  return Object.keys(m).sort((a, b) => (MO[a] ?? 0) - (MO[b] ?? 0)).map(mo => ({
+    date: mo,
+    score: avg(m[mo])
+  }));
 }
 function buildQuarterly(h) {
-  const q={};
-  h.forEach(e=>{const mo=e.date.split(' ')[0],qk=QM[mo];if(!qk)return;if(!q[qk])q[qk]=[];q[qk].push(e.score);});
-  return ['Q1','Q2','Q3','Q4'].filter(k=>q[k]).map(k=>({date:k,score:avg(q[k])}));
+  const q = {};
+  h.forEach(e => {
+    const mo = e.date.split(' ')[0],
+      qk = QM[mo];
+    if (!qk) return;
+    if (!q[qk]) q[qk] = [];
+    q[qk].push(e.score);
+  });
+  return ['Q1', 'Q2', 'Q3', 'Q4'].filter(k => q[k]).map(k => ({
+    date: k,
+    score: avg(q[k])
+  }));
 }
-
-function Spark({history, id}) {
-  const pts = history.slice(-6).map(h=>h[id]||0);
+function Spark({
+  history,
+  id
+}) {
+  const pts = history.slice(-6).map(h => h[id] || 0);
   if (pts.length < 2) return null;
-  const mx=Math.max(...pts,1), mn=Math.min(...pts), range=mx-mn||1;
-  const W=48,H=14;
-  const points=pts.map((v,i)=>`${(i/(pts.length-1))*W},${H-((v-mn)/range)*H}`).join(' ');
-  const col=pts[pts.length-1]>pts[0]?C.onTrack:pts[pts.length-1]<pts[0]?C.err:C.muted;
-  return (
-    <svg width={W} height={H} style={{display:'block',marginTop:3}}>
-      <polyline points={points} fill="none" stroke={col} strokeWidth="1.5" strokeLinejoin="round"/>
-    </svg>
-  );
+  const mx = Math.max(...pts, 1),
+    mn = Math.min(...pts),
+    range = mx - mn || 1;
+  const W = 48,
+    H = 14;
+  const points = pts.map((v, i) => `${i / (pts.length - 1) * W},${H - (v - mn) / range * H}`).join(' ');
+  const col = pts[pts.length - 1] > pts[0] ? C.onTrack : pts[pts.length - 1] < pts[0] ? C.err : C.muted;
+  return /*#__PURE__*/React.createElement("svg", {
+    width: W,
+    height: H,
+    style: {
+      display: 'block',
+      marginTop: 3
+    }
+  }, /*#__PURE__*/React.createElement("polyline", {
+    points: points,
+    fill: "none",
+    stroke: col,
+    strokeWidth: "1.5",
+    strokeLinejoin: "round"
+  }));
 }
-
-function TrendChart({data, isBar}) {
+function TrendChart({
+  data,
+  isBar
+}) {
   if (!data.length) return null;
-  const W=860,H=160,P={t:10,r:10,b:24,l:36};
-  const IW=W-P.l-P.r, IH=H-P.t-P.b;
-  const grid=[0,25,50,75,100].map(v=>{
-    const y=P.t+IH-(v/100)*IH;
-    return <g key={v}>
-      <line x1={P.l} y1={y} x2={W-P.r} y2={y} stroke={C.border} strokeWidth="1" strokeDasharray="3 8"/>
-      <text x={P.l-4} y={y+3} textAnchor="end" fill={C.muted} fontSize="8" fontFamily="Montserrat">{v}%</text>
-    </g>;
+  const W = 860,
+    H = 160,
+    P = {
+      t: 10,
+      r: 10,
+      b: 24,
+      l: 36
+    };
+  const IW = W - P.l - P.r,
+    IH = H - P.t - P.b;
+  const grid = [0, 25, 50, 75, 100].map(v => {
+    const y = P.t + IH - v / 100 * IH;
+    return /*#__PURE__*/React.createElement("g", {
+      key: v
+    }, /*#__PURE__*/React.createElement("line", {
+      x1: P.l,
+      y1: y,
+      x2: W - P.r,
+      y2: y,
+      stroke: C.border,
+      strokeWidth: "1",
+      strokeDasharray: "3 8"
+    }), /*#__PURE__*/React.createElement("text", {
+      x: P.l - 4,
+      y: y + 3,
+      textAnchor: "end",
+      fill: C.muted,
+      fontSize: "8",
+      fontFamily: "Montserrat"
+    }, v, "%"));
   });
   if (isBar) {
-    const bw=Math.min(IW/data.length*0.6,50);
-    return (
-      <svg viewBox={`0 0 ${W} ${H}`} style={{width:'100%',height:H}}>
-        {grid}
-        {data.map((d,i)=>{
-          const cx=P.l+(data.length>1?(i/(data.length-1))*IW:IW/2);
-          const bh=(d.score/100)*IH,y=P.t+IH-bh;
-          return <g key={i}>
-            <rect x={cx-bw/2} y={y} width={bw} height={bh} fill={C.canopy}/>
-            <text x={cx} y={y-5} textAnchor="middle" fill={C.white} fontSize="10" fontFamily="Montserrat" fontWeight="600">{d.score}%</text>
-            <text x={cx} y={H-4} textAnchor="middle" fill={C.muted} fontSize="9" fontFamily="Montserrat">{d.date}</text>
-          </g>;
-        })}
-      </svg>
-    );
+    const bw = Math.min(IW / data.length * 0.6, 50);
+    return /*#__PURE__*/React.createElement("svg", {
+      viewBox: `0 0 ${W} ${H}`,
+      style: {
+        width: '100%',
+        height: H
+      }
+    }, grid, data.map((d, i) => {
+      const cx = P.l + (data.length > 1 ? i / (data.length - 1) * IW : IW / 2);
+      const bh = d.score / 100 * IH,
+        y = P.t + IH - bh;
+      return /*#__PURE__*/React.createElement("g", {
+        key: i
+      }, /*#__PURE__*/React.createElement("rect", {
+        x: cx - bw / 2,
+        y: y,
+        width: bw,
+        height: bh,
+        fill: C.canopy
+      }), /*#__PURE__*/React.createElement("text", {
+        x: cx,
+        y: y - 5,
+        textAnchor: "middle",
+        fill: C.white,
+        fontSize: "10",
+        fontFamily: "Montserrat",
+        fontWeight: "600"
+      }, d.score, "%"), /*#__PURE__*/React.createElement("text", {
+        x: cx,
+        y: H - 4,
+        textAnchor: "middle",
+        fill: C.muted,
+        fontSize: "9",
+        fontFamily: "Montserrat"
+      }, d.date));
+    }));
   }
-  const pts=data.map((d,i)=>({x:P.l+(data.length>1?(i/(data.length-1))*IW:IW/2),y:P.t+IH-(d.score/100)*IH,d}));
-  return (
-    <svg viewBox={`0 0 ${W} ${H}`} style={{width:'100%',height:H}}>
-      {grid}
-      <polyline points={pts.map(p=>`${p.x},${p.y}`).join(' ')} fill="none" stroke={C.white} strokeWidth="1.5" strokeLinejoin="round"/>
-      {pts.map((p,i)=><g key={i}>
-        <circle cx={p.x} cy={p.y} r="3" fill={C.white}/>
-        <text x={p.x} y={H-4} textAnchor="middle" fill={C.muted} fontSize="8" fontFamily="Montserrat">{p.d.date}</text>
-      </g>)}
-    </svg>
-  );
+  const pts = data.map((d, i) => ({
+    x: P.l + (data.length > 1 ? i / (data.length - 1) * IW : IW / 2),
+    y: P.t + IH - d.score / 100 * IH,
+    d
+  }));
+  return /*#__PURE__*/React.createElement("svg", {
+    viewBox: `0 0 ${W} ${H}`,
+    style: {
+      width: '100%',
+      height: H
+    }
+  }, grid, /*#__PURE__*/React.createElement("polyline", {
+    points: pts.map(p => `${p.x},${p.y}`).join(' '),
+    fill: "none",
+    stroke: C.white,
+    strokeWidth: "1.5",
+    strokeLinejoin: "round"
+  }), pts.map((p, i) => /*#__PURE__*/React.createElement("g", {
+    key: i
+  }, /*#__PURE__*/React.createElement("circle", {
+    cx: p.x,
+    cy: p.y,
+    r: "3",
+    fill: C.white
+  }), /*#__PURE__*/React.createElement("text", {
+    x: p.x,
+    y: H - 4,
+    textAnchor: "middle",
+    fill: C.muted,
+    fontSize: "8",
+    fontFamily: "Montserrat"
+  }, p.d.date))));
 }
-
 function App() {
-  const [vals,       setVals]      = useState({...SEED});
-  const [targets,    setTargets]   = useState({});
-  const [history,    setHistory]   = useState([]);
-  const [editing,    setEditing]   = useState(null);
-  const [editVal,    setEditVal]   = useState('');
-  const [loading,    setLoading]   = useState(true);
-  const [syncedAt,   setSyncedAt]  = useState(null);
-  const [snapMsg,    setSnapMsg]   = useState('');
-  const [copyMsg,    setCopyMsg]   = useState('');
-  const [trendView,  setTrendView] = useState('weekly');
-  const [aiText,     setAiText]    = useState('');
-  const [aiLoading,  setAiLoading] = useState(false);
-  const [aiDate,     setAiDate]    = useState('');
-  const [aiError,    setAiError]   = useState('');
-  const [tgtSugg,    setTgtSugg]   = useState(null);
-  const [tgtLoading, setTgtLoading]= useState(false);
-  const [tgtError,   setTgtError]  = useState('');
-  const [tgtEdits,   setTgtEdits]  = useState({});
+  const [vals, setVals] = useState({
+    ...SEED
+  });
+  const [targets, setTargets] = useState({});
+  const [history, setHistory] = useState([]);
+  const [editing, setEditing] = useState(null);
+  const [editVal, setEditVal] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [syncedAt, setSyncedAt] = useState(null);
+  const [snapMsg, setSnapMsg] = useState('');
+  const [copyMsg, setCopyMsg] = useState('');
+  const [trendView, setTrendView] = useState('weekly');
+  const [aiText, setAiText] = useState('');
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiDate, setAiDate] = useState('');
+  const [aiError, setAiError] = useState('');
+  const [tgtSugg, setTgtSugg] = useState(null);
+  const [tgtLoading, setTgtLoading] = useState(false);
+  const [tgtError, setTgtError] = useState('');
+  const [tgtEdits, setTgtEdits] = useState({});
 
   // Resolve target: Supabase/AI override first, then hardcoded default
   const getT = useCallback(id => {
     if (targets[id] != null) return targets[id];
-    return KPIS.find(k=>k.id===id)?.defaultTarget ?? null;
+    return KPIS.find(k => k.id === id)?.defaultTarget ?? null;
   }, [targets]);
-
-  useEffect(()=>{
-    (async()=>{
+  useEffect(() => {
+    (async () => {
       try {
-        const {data,error} = await db.from('kpi_data').select('*').eq('id','bogat').single();
+        const {
+          data,
+          error
+        } = await db.from('kpi_data').select('*').eq('id', 'bogat').single();
         if (!error && data) {
-          setVals(()=>({...SEED,...data.vals}));
+          setVals(() => ({
+            ...SEED,
+            ...data.vals
+          }));
           if (data.targets && Object.keys(data.targets).length) setTargets(data.targets);
           setSyncedAt(data.synced_at);
           // Load history from Supabase; migrate any local-only history if Supabase is empty
@@ -205,477 +507,1153 @@ function App() {
                 const parsed = JSON.parse(local);
                 if (parsed.length) {
                   setHistory(parsed);
-                  await db.from('kpi_data').update({history: parsed}).eq('id','bogat');
+                  await db.from('kpi_data').update({
+                    history: parsed
+                  }).eq('id', 'bogat');
                   localStorage.removeItem('bogat-kpi-history');
                 }
               }
             } catch {}
           }
         }
-      } catch(e){ console.warn('Supabase:', e.message); }
+      } catch (e) {
+        console.warn('Supabase:', e.message);
+      }
       setLoading(false);
     })();
-  },[]);
-
-  const commitEdit = useCallback(async(id, raw)=>{
-    const n=parseInt(raw,10);
-    if (isNaN(n)||n<0){ setEditing(null); return; }
-    const nv={...vals,[id]:n};
+  }, []);
+  const commitEdit = useCallback(async (id, raw) => {
+    const n = parseInt(raw, 10);
+    if (isNaN(n) || n < 0) {
+      setEditing(null);
+      return;
+    }
+    const nv = {
+      ...vals,
+      [id]: n
+    };
     setVals(nv);
     setEditing(null);
-    try{ await db.from('kpi_data').update({vals:nv}).eq('id','bogat'); }catch{}
-  },[vals]);
-
-  const saveSnap = async()=>{
-    const label = new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'});
-    const active = KPIS.filter(k=>!k.ph&&getT(k.id));
-    const score  = active.length ? Math.round(active.reduce((s,k)=>s+Math.min((vals[k.id]||0)/getT(k.id),1),0)/active.length*100) : 0;
-    const snap   = {date:label, score, ...Object.fromEntries(KPIS.map(k=>[k.id,vals[k.id]||0]))};
-    const nh     = [...history.filter(h=>h.date!==label), snap].slice(-52);
-    setHistory(nh);
-    setSnapMsg('SAVED'); setTimeout(()=>setSnapMsg(''),2500);
-    try { await db.from('kpi_data').update({history: nh}).eq('id','bogat'); } catch {}
-  };
-
-  const analyzeWithAI = async()=>{
-    setAiLoading(true); setAiError(''); setAiText('');
     try {
-      const currentTargets={};
-      KPIS.forEach(k=>{ if(!k.ph) currentTargets[k.id]=getT(k.id); });
-      const r = await fetch(FN,{method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({mode:'analyze',vals,history,currentTargets})});
-      const data=await r.json();
-      if(data.error) throw new Error(data.error);
+      await db.from('kpi_data').update({
+        vals: nv
+      }).eq('id', 'bogat');
+    } catch {}
+  }, [vals]);
+  const saveSnap = async () => {
+    const label = new Date().toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric'
+    });
+    const active = KPIS.filter(k => !k.ph && getT(k.id));
+    const score = active.length ? Math.round(active.reduce((s, k) => s + Math.min((vals[k.id] || 0) / getT(k.id), 1), 0) / active.length * 100) : 0;
+    const snap = {
+      date: label,
+      score,
+      ...Object.fromEntries(KPIS.map(k => [k.id, vals[k.id] || 0]))
+    };
+    const nh = [...history.filter(h => h.date !== label), snap].slice(-52);
+    setHistory(nh);
+    setSnapMsg('SAVED');
+    setTimeout(() => setSnapMsg(''), 2500);
+    try {
+      await db.from('kpi_data').update({
+        history: nh
+      }).eq('id', 'bogat');
+    } catch {}
+  };
+  const analyzeWithAI = async () => {
+    setAiLoading(true);
+    setAiError('');
+    setAiText('');
+    try {
+      const currentTargets = {};
+      KPIS.forEach(k => {
+        if (!k.ph) currentTargets[k.id] = getT(k.id);
+      });
+      const r = await fetch(FN, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          mode: 'analyze',
+          vals,
+          history,
+          currentTargets
+        })
+      });
+      const data = await r.json();
+      if (data.error) throw new Error(data.error);
       setAiText(data.analysis);
-      setAiDate(new Date().toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}));
-    }catch(e){ setAiError(e.message); }
+      setAiDate(new Date().toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }));
+    } catch (e) {
+      setAiError(e.message);
+    }
     setAiLoading(false);
   };
-
-  const generateTargets = async()=>{
-    setTgtLoading(true); setTgtError(''); setTgtSugg(null);
+  const generateTargets = async () => {
+    setTgtLoading(true);
+    setTgtError('');
+    setTgtSugg(null);
     try {
-      const currentTargets={};
-      KPIS.forEach(k=>{ if(!k.ph) currentTargets[k.id]=getT(k.id); });
-      const r = await fetch(FN,{method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({mode:'targets',vals,history,currentTargets})});
-      const data=await r.json();
-      if(data.error) throw new Error(data.error);
+      const currentTargets = {};
+      KPIS.forEach(k => {
+        if (!k.ph) currentTargets[k.id] = getT(k.id);
+      });
+      const r = await fetch(FN, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          mode: 'targets',
+          vals,
+          history,
+          currentTargets
+        })
+      });
+      const data = await r.json();
+      if (data.error) throw new Error(data.error);
       setTgtSugg(data.targets);
       setTgtEdits({});
-    }catch(e){ setTgtError(e.message); }
+    } catch (e) {
+      setTgtError(e.message);
+    }
     setTgtLoading(false);
   };
-
-  const acceptTargets = async(toAccept)=>{
-    const merged={...targets};
-    Object.entries(toAccept).forEach(([id,val])=>{ const n=parseInt(val); if(!isNaN(n)) merged[id]=n; });
+  const acceptTargets = async toAccept => {
+    const merged = {
+      ...targets
+    };
+    Object.entries(toAccept).forEach(([id, val]) => {
+      const n = parseInt(val);
+      if (!isNaN(n)) merged[id] = n;
+    });
     setTargets(merged);
     setTgtSugg(null);
     setTgtEdits({});
-    try{ await db.from('kpi_data').update({targets:merged}).eq('id','bogat'); }catch{}
+    try {
+      await db.from('kpi_data').update({
+        targets: merged
+      }).eq('id', 'bogat');
+    } catch {}
   };
-
-  const copySnap = ()=>{
-    const d=new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
-    const active=KPIS.filter(k=>!k.ph&&getT(k.id));
-    const score=active.length?Math.round(active.reduce((s,k)=>s+Math.min((vals[k.id]||0)/getT(k.id),1),0)/active.length*100):0;
-    const totalReach=KPIS.filter(k=>k.s==='REACH').reduce((s,k)=>s+(vals[k.id]||0),0);
-    const lines=[
-      '══════════════════════════════════════════',
-      '  BOGAT ARCHITECTURE & DESIGN — KPI PULSE',
-      `  ${d}`,
-      '══════════════════════════════════════════',
-      '',' ▸ REACH',
-      ...KPIS.filter(k=>k.s==='REACH').map(k=>{const v=vals[k.id]||0,t=getT(k.id),p=pct(v,t);return `  ${k.label}: ${fmt(v)}${t?` / ${fmt(t)} (${p}%)`:''}`;}),
-      '',' ▸ CONTENT & PIPELINE',
-      ...KPIS.filter(k=>k.s==='CONTENT'||k.s==='PIPELINE').map(k=>{const v=vals[k.id]||0,t=getT(k.id),p=pct(v,t);return `  ${k.label}: ${v}${t?` / ${t} → ${p}%`:''}`;}),
-      '',`  HEALTH SCORE: ${score}%   TOTAL REACH: ${fmt(totalReach)}`,
-      '══════════════════════════════════════════',
-    ];
-    navigator.clipboard.writeText(lines.join('\n')).catch(()=>{});
-    setCopyMsg('COPIED'); setTimeout(()=>setCopyMsg(''),2500);
+  const copySnap = () => {
+    const d = new Date().toLocaleDateString('en-US', {
+      weekday: 'long',
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric'
+    });
+    const active = KPIS.filter(k => !k.ph && getT(k.id));
+    const score = active.length ? Math.round(active.reduce((s, k) => s + Math.min((vals[k.id] || 0) / getT(k.id), 1), 0) / active.length * 100) : 0;
+    const totalReach = KPIS.filter(k => k.s === 'REACH').reduce((s, k) => s + (vals[k.id] || 0), 0);
+    const lines = ['══════════════════════════════════════════', '  BOGAT ARCHITECTURE & DESIGN — KPI PULSE', `  ${d}`, '══════════════════════════════════════════', '', ' ▸ REACH', ...KPIS.filter(k => k.s === 'REACH').map(k => {
+      const v = vals[k.id] || 0,
+        t = getT(k.id),
+        p = pct(v, t);
+      return `  ${k.label}: ${fmt(v)}${t ? ` / ${fmt(t)} (${p}%)` : ''}`;
+    }), '', ' ▸ CONTENT & PIPELINE', ...KPIS.filter(k => k.s === 'CONTENT' || k.s === 'PIPELINE').map(k => {
+      const v = vals[k.id] || 0,
+        t = getT(k.id),
+        p = pct(v, t);
+      return `  ${k.label}: ${v}${t ? ` / ${t} → ${p}%` : ''}`;
+    }), '', `  HEALTH SCORE: ${score}%   TOTAL REACH: ${fmt(totalReach)}`, '══════════════════════════════════════════'];
+    navigator.clipboard.writeText(lines.join('\n')).catch(() => {});
+    setCopyMsg('COPIED');
+    setTimeout(() => setCopyMsg(''), 2500);
   };
-
-  if (loading) return (
-    <div style={{background:C.bg,height:'100vh',display:'flex',alignItems:'center',justifyContent:'center',
-      color:C.muted,fontSize:10,letterSpacing:'0.25em',fontFamily:'Montserrat,sans-serif'}}>
-      LOADING KPI PULSE…
-    </div>
-  );
-
-  const active     = KPIS.filter(k=>!k.ph&&getT(k.id));
-  const score      = active.length ? Math.round(active.reduce((s,k)=>s+Math.min((vals[k.id]||0)/getT(k.id),1),0)/active.length*100) : 0;
-  const scoreColor = score>=75?C.white:score>=40?C.onTrack:C.muted;
-  const totalReach = KPIS.filter(k=>k.s==='REACH').reduce((s,k)=>s+(vals[k.id]||0),0);
-  const syncLabel  = syncedAt ? new Date(syncedAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : null;
-  const trendData  = trendView==='monthly'?buildMonthly(history):trendView==='quarterly'?buildQuarterly(history):history;
+  if (loading) return /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: C.bg,
+      height: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      color: C.muted,
+      fontSize: 10,
+      letterSpacing: '0.25em',
+      fontFamily: 'Montserrat,sans-serif'
+    }
+  }, "LOADING KPI PULSE…");
+  const active = KPIS.filter(k => !k.ph && getT(k.id));
+  const score = active.length ? Math.round(active.reduce((s, k) => s + Math.min((vals[k.id] || 0) / getT(k.id), 1), 0) / active.length * 100) : 0;
+  const scoreColor = score >= 75 ? C.white : score >= 40 ? C.onTrack : C.muted;
+  const totalReach = KPIS.filter(k => k.s === 'REACH').reduce((s, k) => s + (vals[k.id] || 0), 0);
+  const syncLabel = syncedAt ? new Date(syncedAt).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric'
+  }) : null;
+  const trendData = trendView === 'monthly' ? buildMonthly(history) : trendView === 'quarterly' ? buildQuarterly(history) : history;
   const aiTgtCount = Object.keys(targets).length;
-
-  return (
-    <div style={{background:C.bg,minHeight:'100vh',padding:'28px 24px 64px',maxWidth:960,margin:'0 auto'}}>
-
-      {/* HEADER */}
-      <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:40,flexWrap:'wrap',gap:20}}>
-        <div>
-          <div style={{fontSize:8,fontWeight:700,letterSpacing:'0.45em',color:C.muted,marginBottom:9}}>BOGAT ARCHITECTURE & DESIGN</div>
-          <div style={{fontSize:28,fontWeight:200,letterSpacing:'0.1em',lineHeight:1,color:C.text}}>
-            KPI <span style={{color:C.white,fontWeight:700,letterSpacing:'0.05em'}}>PULSE</span>
-          </div>
-          <div style={{fontSize:9,color:C.muted,marginTop:8,letterSpacing:'0.08em'}}>
-            {syncLabel ? `ClickUp synced ${syncLabel}` : 'Auto-synced Sundays via Claude'}
-          </div>
-        </div>
-        <div style={{display:'flex',gap:24,alignItems:'flex-end'}}>
-          <div style={{textAlign:'right'}}>
-            <div style={{fontSize:7,fontWeight:700,letterSpacing:'0.3em',color:C.muted,marginBottom:4}}>TOTAL REACH</div>
-            <div style={{fontSize:28,fontWeight:100,color:C.sage,letterSpacing:'-0.02em',lineHeight:1}}>{fmt(totalReach)}</div>
-          </div>
-          <div style={{textAlign:'right'}}>
-            <div style={{fontSize:7,fontWeight:700,letterSpacing:'0.3em',color:C.muted,marginBottom:4}}>HEALTH SCORE</div>
-            <div style={{fontSize:40,fontWeight:100,color:scoreColor,letterSpacing:'-0.03em',lineHeight:1}}>
-              {score}<span style={{fontSize:18,marginLeft:2,fontWeight:200}}>%</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* KPI SECTIONS */}
-      {Object.keys(SECS).map(sk=>{
-        const sec=SECS[sk], secKpis=KPIS.filter(k=>k.s===sk), isDim=sk==='FINANCIAL';
-        return (
-          <div key={sk} style={{marginBottom:32,opacity:isDim?0.55:1}}>
-            <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:10}}>
-              <div style={{fontSize:8,fontWeight:700,letterSpacing:'0.4em',color:isDim?C.muted:C.sage}}>{sec.label}</div>
-              <div style={{flex:1,height:1,background:C.border}}/>
-              <div style={{fontSize:8,color:C.muted,letterSpacing:'0.08em',whiteSpace:'nowrap'}}>{sec.desc}</div>
-            </div>
-            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(148px,1fr))',gap:1,background:C.border}}>
-              {secKpis.map(kpi=>{
-                const v=vals[kpi.id]||0, tgt=getT(kpi.id), p=pct(v,tgt), st=statusOf(v,tgt);
-                const ach=tgt&&v>=tgt, isEdit=editing===kpi.id, isPH=!!kpi.ph;
-                const badge=kpi.src==='pf'?'PF':kpi.src==='cu'?'CU':kpi.src==='wave'?'WAVE':'';
-                const badgeColor=isPH?C.whiteDim:kpi.src==='cu'||kpi.src==='pf'?C.sage:C.muted;
-                const isAITarget=targets[kpi.id]!=null;
-                return (
-                  <div key={kpi.id}
-                    style={{background:C.card,padding:'20px 16px 18px',position:'relative',
-                      borderTop:`2px solid ${ach?C.white:'transparent'}`,transition:'background .15s'}}
-                    onMouseEnter={e=>e.currentTarget.style.background=C.cardH}
-                    onMouseLeave={e=>e.currentTarget.style.background=C.card}>
-                    {isAITarget&&(
-                      <div style={{position:'absolute',top:7,right:8,fontSize:6,fontWeight:700,
-                        letterSpacing:'0.12em',color:C.sage,opacity:.75}}>AI</div>
-                    )}
-                    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}}>
-                      <div style={{fontSize:7,fontWeight:700,letterSpacing:'0.3em',color:C.muted,textTransform:'uppercase'}}>{kpi.label}</div>
-                      <div style={{fontSize:7,fontWeight:600,letterSpacing:'0.1em',color:badgeColor,marginRight:isAITarget?10:0}}>{badge}</div>
-                    </div>
-                    {isEdit ? (
-                      <input type="number" autoFocus value={editVal}
-                        onChange={e=>setEditVal(e.target.value)}
-                        onBlur={()=>commitEdit(kpi.id,editVal)}
-                        onKeyDown={e=>{if(e.key==='Enter')commitEdit(kpi.id,editVal);if(e.key==='Escape')setEditing(null);}}
-                        style={{background:'transparent',border:'none',borderBottom:`1px solid ${C.white}`,
-                          color:C.text,fontSize:28,fontWeight:200,fontFamily:'Montserrat,sans-serif',
-                          width:'100%',outline:'none',letterSpacing:'-0.02em',marginBottom:14,padding:0}}/>
-                    ) : (
-                      <div onClick={()=>{if(!isPH){setEditing(kpi.id);setEditVal(String(v));}}}
-                        title={!isPH?'Click to update':''}
-                        style={{fontSize:v>=10000?22:28,fontWeight:200,color:ach?C.white:C.text,
-                          letterSpacing:'-0.02em',lineHeight:1,marginBottom:4,
-                          cursor:isPH?'default':'pointer',userSelect:'none'}}>
-                        {isPH?'—':fmt(v)}
-                      </div>
-                    )}
-                    {history.length>=2&&!isEdit&&<Spark history={history} id={kpi.id}/>}
-                    <div style={{fontSize:8,color:C.muted,letterSpacing:'0.1em',margin:'8px 0 14px',textTransform:'uppercase'}}>
-                      {kpi.sub}
-                      {tgt&&!isPH&&<span style={{color:C.whiteDim}}> / {fmt(tgt)}</span>}
-                    </div>
-                    {tgt&&!isPH&&(
-                      <>
-                        <div style={{height:2,background:C.canopy,position:'relative',marginBottom:7}}>
-                          <div style={{position:'absolute',left:0,top:0,height:'100%',width:`${p}%`,
-                            background:ach?C.white:C.sage,transition:'width .4s ease'}}/>
-                          {[25,50,75].map(t=>(
-                            <div key={t} style={{position:'absolute',left:`${t}%`,top:-3,width:1,height:8,background:C.bg,opacity:.9}}/>
-                          ))}
-                        </div>
-                        <div style={{display:'flex',justifyContent:'space-between',marginBottom:9}}>
-                          <span style={{fontSize:9,fontWeight:700,letterSpacing:'0.04em',color:ach?C.white:C.muted}}>{p}%</span>
-                          {st&&<span style={{fontSize:7,fontWeight:700,letterSpacing:'0.2em',color:st.color}}>{st.label}</span>}
-                        </div>
-                      </>
-                    )}
-                    {kpi.deadline&&!isPH&&<div style={{fontSize:8,color:C.muted,letterSpacing:'0.06em'}}>{kpi.deadline}</div>}
-                    {isPH&&<div style={{fontSize:8,color:C.whiteDim,letterSpacing:'0.1em',marginTop:8}}>CONNECT WAVE API</div>}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        );
-      })}
-
-      {/* TRENDS */}
-      <div style={{marginBottom:32}}>
-        <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:12}}>
-          <div style={{fontSize:8,fontWeight:700,letterSpacing:'0.4em',color:C.sage}}>TRENDS</div>
-          <div style={{flex:1,height:1,background:C.border}}/>
-          <div style={{display:'flex',gap:1,background:C.border}}>
-            {['weekly','monthly','quarterly'].map(v=>(
-              <button key={v} onClick={()=>setTrendView(v)}
-                style={{fontSize:7,fontWeight:700,letterSpacing:'0.15em',padding:'5px 10px',
-                  background:trendView===v?C.canopy:C.card,color:trendView===v?C.text:C.muted,
-                  textTransform:'uppercase',border:'none',outline:'none',cursor:'pointer',fontFamily:'Montserrat,sans-serif'}}>
-                {v.slice(0,2).toUpperCase()}
-              </button>
-            ))}
-          </div>
-        </div>
-        {history.length>0 ? (
-          <>
-            <div style={{background:C.card,padding:'16px',borderTop:`1px solid ${C.border}`,overflowX:'auto'}}>
-              <TrendChart data={trendData} isBar={trendView==='quarterly'}/>
-            </div>
-            <div style={{display:'flex',gap:1,background:C.border,marginTop:1}}>
-              {(()=>{
-                const mo=buildMonthly(history),qt=buildQuarterly(history);
-                return [
-                  {label:'THIS MONTH', val:mo.length?`${mo[mo.length-1].score}%`:'—'},
-                  {label:'LAST MONTH', val:mo.length>1?`${mo[mo.length-2].score}%`:'—'},
-                  {label:'THIS QTR',   val:qt.length?`${qt[qt.length-1].score}%`:'—'},
-                  {label:'PEAK WEEK',  val:history.length?`${Math.max(...history.map(h=>h.score))}%`:'—'},
-                ].map(it=>(
-                  <div key={it.label} style={{flex:1,background:C.card,padding:'12px 10px',textAlign:'center'}}>
-                    <div style={{fontSize:7,color:C.muted,letterSpacing:'0.2em',marginBottom:5}}>{it.label}</div>
-                    <div style={{fontSize:18,fontWeight:200,color:it.val==='—'?C.muted:C.white}}>{it.val}</div>
-                  </div>
-                ));
-              })()}
-            </div>
-          </>
-        ) : (
-          <div style={{background:C.card,borderTop:`1px solid ${C.border}`,padding:'36px 24px',textAlign:'center'}}>
-            <div style={{fontSize:9,color:C.muted,letterSpacing:'0.2em',marginBottom:6}}>HIT "SAVE THIS WEEK" TO START BUILDING TRENDS</div>
-            <div style={{fontSize:8,color:C.muted,letterSpacing:'0.1em',opacity:.6}}>Weekly · Monthly · Quarterly views build automatically</div>
-          </div>
-        )}
-      </div>
-
-      {/* AI TARGETS */}
-      <div style={{marginBottom:32}}>
-        <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:12}}>
-          <div style={{fontSize:8,fontWeight:700,letterSpacing:'0.4em',color:C.sage}}>AI TARGETS</div>
-          <div style={{flex:1,height:1,background:C.border}}/>
-          {aiTgtCount>0&&(
-            <div style={{fontSize:8,color:C.sage,letterSpacing:'0.1em',marginRight:8,opacity:.8}}>
-              {aiTgtCount} ACTIVE
-            </div>
-          )}
-          <button onClick={generateTargets} disabled={tgtLoading} className="no-print"
-            style={{fontSize:8,fontWeight:700,letterSpacing:'0.2em',padding:'6px 16px',
-              background:'transparent',color:tgtLoading?C.muted:C.sage,
-              border:`1px solid ${tgtLoading?C.canopy:C.border}`,outline:'none',
-              cursor:tgtLoading?'default':'pointer',fontFamily:'Montserrat,sans-serif',
-              transition:'all .2s',whiteSpace:'nowrap'}}>
-            {tgtLoading?'GENERATING…':aiTgtCount?'REFRESH WITH AI':'GENERATE WITH AI'}
-          </button>
-        </div>
-
-        {tgtError&&(
-          <div style={{background:C.card,borderTop:`1px solid ${C.err}`,padding:'14px 20px',fontSize:10,color:C.err,letterSpacing:'0.06em'}}>{tgtError}</div>
-        )}
-
-        {tgtLoading&&(
-          <div style={{background:C.card,borderTop:`1px solid ${C.border}`,padding:'36px 24px',textAlign:'center'}}>
-            <div style={{fontSize:9,color:C.muted,letterSpacing:'0.2em',marginBottom:6}}>RESEARCHING BENCHMARKS…</div>
-            <div style={{fontSize:8,color:C.muted,letterSpacing:'0.1em',opacity:.6}}>Claude is calibrating targets against your numbers and architecture industry standards</div>
-          </div>
-        )}
-
-        {tgtSugg&&!tgtLoading&&(
-          <div style={{background:C.card,borderTop:`1px solid ${C.border}`}}>
-            <div style={{padding:'16px 20px',borderBottom:`1px solid ${C.border}`,display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:12}}>
-              <div>
-                <div style={{fontSize:8,fontWeight:700,letterSpacing:'0.2em',color:C.white,marginBottom:4}}>AI TARGET SUGGESTIONS</div>
-                <div style={{fontSize:8,color:C.muted,letterSpacing:'0.08em'}}>Edit any number · accept individually or all at once · saved to Supabase</div>
-              </div>
-              <div style={{display:'flex',gap:8}}>
-                <button onClick={()=>{setTgtSugg(null);setTgtEdits({});}}
-                  style={{fontSize:8,fontWeight:600,letterSpacing:'0.15em',padding:'8px 14px',
-                    background:'transparent',color:C.muted,border:`1px solid ${C.border}`,
-                    outline:'none',cursor:'pointer',fontFamily:'Montserrat,sans-serif'}}>
-                  DISMISS
-                </button>
-                <button onClick={()=>{
-                  const toAccept={};
-                  KPIS.filter(k=>!k.ph&&tgtSugg[k.id]).forEach(k=>{
-                    toAccept[k.id]=tgtEdits[k.id]??tgtSugg[k.id].value;
-                  });
-                  acceptTargets(toAccept);
-                }}
-                  style={{fontSize:8,fontWeight:700,letterSpacing:'0.2em',padding:'8px 20px',
-                    background:C.white,color:C.whiteFnt,border:'none',outline:'none',
-                    cursor:'pointer',fontFamily:'Montserrat,sans-serif'}}>
-                  ACCEPT ALL
-                </button>
-              </div>
-            </div>
-            <div style={{overflowX:'auto'}}>
-              <table style={{width:'100%',borderCollapse:'collapse',minWidth:580}}>
-                <thead>
-                  <tr style={{borderBottom:`1px solid ${C.border}`}}>
-                    {['METRIC','NOW','CURRENT TARGET','AI SUGGESTS','TIMEFRAME','REASONING',''].map((h,i)=>(
-                      <th key={i} style={{padding:'10px 14px',fontSize:7,fontWeight:700,letterSpacing:'0.2em',
-                        color:C.muted,textAlign:i>=1&&i<=5?'center':'left',whiteSpace:'nowrap'}}>
-                        {h}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {KPIS.filter(k=>!k.ph&&tgtSugg[k.id]).map((kpi,i)=>{
-                    const sugg=tgtSugg[kpi.id];
-                    const editedVal=tgtEdits[kpi.id]??sugg.value;
-                    const current=getT(kpi.id);
-                    const changed=sugg.value!==current;
-                    return (
-                      <tr key={kpi.id} style={{borderBottom:`1px solid ${C.border}`,
-                        background:i%2===0?'transparent':'rgba(255,255,255,0.015)'}}>
-                        <td style={{padding:'12px 14px',fontSize:10,color:C.text,fontWeight:500,whiteSpace:'nowrap'}}>{kpi.label}</td>
-                        <td style={{padding:'12px 14px',fontSize:10,color:C.muted,textAlign:'center'}}>{fmt(vals[kpi.id]||0)}</td>
-                        <td style={{padding:'12px 14px',fontSize:10,color:C.muted,textAlign:'center'}}>{current?fmt(current):'—'}</td>
-                        <td style={{padding:'12px 14px',textAlign:'center'}}>
-                          <input type="number" value={editedVal}
-                            onChange={e=>setTgtEdits(prev=>({...prev,[kpi.id]:parseInt(e.target.value)||sugg.value}))}
-                            style={{background:'transparent',border:`1px solid ${changed?C.borderM:C.border}`,
-                              color:changed?C.white:C.muted,fontSize:11,fontWeight:changed?600:400,
-                              fontFamily:'Montserrat,sans-serif',width:72,textAlign:'center',
-                              padding:'4px 6px',outline:'none'}}/>
-                        </td>
-                        <td style={{padding:'12px 14px',fontSize:9,color:C.muted,textAlign:'center',whiteSpace:'nowrap'}}>{sugg.timeframe}</td>
-                        <td style={{padding:'12px 14px',fontSize:10,color:C.muted,maxWidth:220,lineHeight:1.6}}>{sugg.reasoning}</td>
-                        <td style={{padding:'12px 14px',textAlign:'center'}}>
-                          <button onClick={()=>acceptTargets({[kpi.id]:editedVal})}
-                            style={{fontSize:7,fontWeight:700,letterSpacing:'0.15em',padding:'5px 10px',
-                              background:C.canopy,color:C.text,border:'none',outline:'none',
-                              cursor:'pointer',fontFamily:'Montserrat,sans-serif',whiteSpace:'nowrap'}}>
-                            APPLY
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {!tgtSugg&&!tgtError&&!tgtLoading&&(
-          <div style={{background:C.card,borderTop:`1px solid ${C.border}`,padding:'24px',textAlign:'center'}}>
-            <div style={{fontSize:9,color:C.muted,letterSpacing:'0.2em',marginBottom:5}}>
-              {aiTgtCount
-                ? `${aiTgtCount} AI TARGETS ACTIVE · CARDS MARKED WITH "AI" BADGE · CLICK REFRESH TO RECALIBRATE`
-                : 'AI CALIBRATES TARGETS USING YOUR NUMBERS, STAGE & ARCHITECTURE INDUSTRY BENCHMARKS'}
-            </div>
-            <div style={{fontSize:8,color:C.muted,letterSpacing:'0.1em',opacity:.6,marginTop:4}}>
-              Targets save to Supabase · visible on any device · recalibrate anytime
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* AI INSIGHTS */}
-      <div style={{marginBottom:32}}>
-        <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:12}}>
-          <div style={{fontSize:8,fontWeight:700,letterSpacing:'0.4em',color:C.sage}}>AI INSIGHTS</div>
-          <div style={{flex:1,height:1,background:C.border}}/>
-          <button onClick={analyzeWithAI} disabled={aiLoading} className="no-print"
-            style={{fontSize:8,fontWeight:700,letterSpacing:'0.2em',padding:'6px 16px',
-              background:aiLoading?C.canopy:C.white,color:aiLoading?C.muted:C.whiteFnt,
-              border:'none',outline:'none',cursor:aiLoading?'default':'pointer',
-              fontFamily:'Montserrat,sans-serif',opacity:aiLoading?0.7:1,
-              transition:'all .2s',whiteSpace:'nowrap'}}>
-            {aiLoading?'ANALYZING…':aiDate?'REFRESH ANALYSIS':'ANALYZE WITH AI'}
-          </button>
-        </div>
-
-        {aiError&&(
-          <div style={{background:C.card,borderTop:`1px solid ${C.err}`,padding:'16px 20px',fontSize:10,color:C.err,letterSpacing:'0.06em'}}>{aiError}</div>
-        )}
-
-        {aiText&&(
-          <div style={{background:C.card,borderTop:`1px solid ${C.border}`,padding:'28px 24px'}}>
-            {aiDate&&<div style={{fontSize:7,color:C.muted,letterSpacing:'0.2em',marginBottom:20}}>GENERATED {aiDate.toUpperCase()} · CLAUDE AI</div>}
-            {aiText.split('\n').map((line,i)=>{
-              if (line.startsWith('**')&&line.endsWith('**')&&line.length>4) {
-                return <div key={i} style={{fontSize:8,fontWeight:700,letterSpacing:'0.3em',color:C.white,
-                  marginTop:i===0?0:24,marginBottom:10,paddingBottom:8,borderBottom:`1px solid ${C.border}`}}>
-                  {line.slice(2,-2).toUpperCase()}
-                </div>;
-              }
-              if (!line.trim()) return <div key={i} style={{height:6}}/>;
-              return <div key={i} style={{fontSize:12,color:C.text,lineHeight:1.75,letterSpacing:'0.01em',marginBottom:2}}>
-                {line.replace(/\*\*/g,'')}
-              </div>;
-            })}
-          </div>
-        )}
-
-        {!aiText&&!aiError&&!aiLoading&&(
-          <div style={{background:C.card,borderTop:`1px solid ${C.border}`,padding:'36px 24px',textAlign:'center'}}>
-            <div style={{fontSize:9,color:C.muted,letterSpacing:'0.2em',marginBottom:6}}>CLICK "ANALYZE WITH AI" FOR YOUR WEEKLY STRATEGIC DEBRIEF</div>
-            <div style={{fontSize:8,color:C.muted,letterSpacing:'0.1em',opacity:.6}}>Powered by Claude · knows your business, stage, and goals</div>
-          </div>
-        )}
-
-        {aiLoading&&(
-          <div style={{background:C.card,borderTop:`1px solid ${C.border}`,padding:'36px 24px',textAlign:'center'}}>
-            <div style={{fontSize:9,color:C.muted,letterSpacing:'0.2em',marginBottom:6}}>READING YOUR NUMBERS…</div>
-            <div style={{fontSize:8,color:C.muted,letterSpacing:'0.1em',opacity:.6}}>Claude is analyzing your KPIs against your business stage</div>
-          </div>
-        )}
-      </div>
-
-      {/* FOOTER */}
-      <div className="no-print" style={{display:'flex',alignItems:'center',gap:8,paddingTop:16,borderTop:`1px solid ${C.border}`,flexWrap:'wrap'}}>
-        <button onClick={saveSnap}
-          style={{fontSize:9,fontWeight:700,letterSpacing:'0.22em',padding:'11px 22px',
-            background:C.white,color:C.whiteFnt,border:'none',outline:'none',minWidth:160,
-            cursor:'pointer',fontFamily:'Montserrat,sans-serif',transition:'filter .15s'}}
-          onMouseEnter={e=>e.currentTarget.style.filter='brightness(0.9)'}
-          onMouseLeave={e=>e.currentTarget.style.filter=''}>
-          {snapMsg||'SAVE THIS WEEK'}
-        </button>
-        <button onClick={copySnap}
-          style={{fontSize:9,fontWeight:700,letterSpacing:'0.22em',padding:'11px 18px',
-            background:'transparent',border:`1px solid ${C.border}`,color:C.muted,
-            outline:'none',cursor:'pointer',fontFamily:'Montserrat,sans-serif',transition:'all .15s'}}
-          onMouseEnter={e=>{e.currentTarget.style.borderColor=C.borderM;e.currentTarget.style.color=C.sage;}}
-          onMouseLeave={e=>{e.currentTarget.style.borderColor=C.border;e.currentTarget.style.color=C.muted;}}>
-          {copyMsg||'COPY SNAPSHOT'}
-        </button>
-        <button onClick={()=>window.print()}
-          style={{fontSize:9,fontWeight:700,letterSpacing:'0.22em',padding:'11px 18px',
-            background:'transparent',border:`1px solid ${C.border}`,color:C.muted,
-            outline:'none',cursor:'pointer',fontFamily:'Montserrat,sans-serif',transition:'all .15s'}}
-          onMouseEnter={e=>{e.currentTarget.style.borderColor=C.borderM;e.currentTarget.style.color=C.sage;}}
-          onMouseLeave={e=>{e.currentTarget.style.borderColor=C.border;e.currentTarget.style.color=C.muted;}}>
-          SAVE AS PDF
-        </button>
-        <div style={{flex:1}}/>
-        <div style={{fontSize:8,color:C.muted,letterSpacing:'0.08em',textAlign:'right',opacity:.7}}>
-          PF = Postflow · CU = ClickUp · AI badge = AI-calibrated target · click any number to update
-        </div>
-      </div>
-    </div>
-  );
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: C.bg,
+      minHeight: '100vh',
+      padding: '28px 24px 64px',
+      maxWidth: 960,
+      margin: '0 auto'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+      marginBottom: 40,
+      flexWrap: 'wrap',
+      gap: 20
+    }
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 8,
+      fontWeight: 700,
+      letterSpacing: '0.45em',
+      color: C.muted,
+      marginBottom: 9
+    }
+  }, "BOGAT ARCHITECTURE & DESIGN"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 28,
+      fontWeight: 200,
+      letterSpacing: '0.1em',
+      lineHeight: 1,
+      color: C.text
+    }
+  }, "KPI ", /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: C.white,
+      fontWeight: 700,
+      letterSpacing: '0.05em'
+    }
+  }, "PULSE")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 9,
+      color: C.muted,
+      marginTop: 8,
+      letterSpacing: '0.08em'
+    }
+  }, syncLabel ? `ClickUp synced ${syncLabel}` : 'Auto-synced Sundays via Claude')), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      gap: 24,
+      alignItems: 'flex-end'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      textAlign: 'right'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 7,
+      fontWeight: 700,
+      letterSpacing: '0.3em',
+      color: C.muted,
+      marginBottom: 4
+    }
+  }, "TOTAL REACH"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 28,
+      fontWeight: 100,
+      color: C.sage,
+      letterSpacing: '-0.02em',
+      lineHeight: 1
+    }
+  }, fmt(totalReach))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      textAlign: 'right'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 7,
+      fontWeight: 700,
+      letterSpacing: '0.3em',
+      color: C.muted,
+      marginBottom: 4
+    }
+  }, "HEALTH SCORE"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 40,
+      fontWeight: 100,
+      color: scoreColor,
+      letterSpacing: '-0.03em',
+      lineHeight: 1
+    }
+  }, score, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 18,
+      marginLeft: 2,
+      fontWeight: 200
+    }
+  }, "%"))))), Object.keys(SECS).map(sk => {
+    const sec = SECS[sk],
+      secKpis = KPIS.filter(k => k.s === sk),
+      isDim = sk === 'FINANCIAL';
+    return /*#__PURE__*/React.createElement("div", {
+      key: sk,
+      style: {
+        marginBottom: 32,
+        opacity: isDim ? 0.55 : 1
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: 10,
+        marginBottom: 10
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 8,
+        fontWeight: 700,
+        letterSpacing: '0.4em',
+        color: isDim ? C.muted : C.sage
+      }
+    }, sec.label), /*#__PURE__*/React.createElement("div", {
+      style: {
+        flex: 1,
+        height: 1,
+        background: C.border
+      }
+    }), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 8,
+        color: C.muted,
+        letterSpacing: '0.08em',
+        whiteSpace: 'nowrap'
+      }
+    }, sec.desc)), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fill,minmax(148px,1fr))',
+        gap: 1,
+        background: C.border
+      }
+    }, secKpis.map(kpi => {
+      const v = vals[kpi.id] || 0,
+        tgt = getT(kpi.id),
+        p = pct(v, tgt),
+        st = statusOf(v, tgt);
+      const ach = tgt && v >= tgt,
+        isEdit = editing === kpi.id,
+        isPH = !!kpi.ph;
+      const badge = kpi.src === 'pf' ? 'PF' : kpi.src === 'cu' ? 'CU' : kpi.src === 'wave' ? 'WAVE' : '';
+      const badgeColor = isPH ? C.whiteDim : kpi.src === 'cu' || kpi.src === 'pf' ? C.sage : C.muted;
+      const isAITarget = targets[kpi.id] != null;
+      return /*#__PURE__*/React.createElement("div", {
+        key: kpi.id,
+        style: {
+          background: C.card,
+          padding: '20px 16px 18px',
+          position: 'relative',
+          borderTop: `2px solid ${ach ? C.white : 'transparent'}`,
+          transition: 'background .15s'
+        },
+        onMouseEnter: e => e.currentTarget.style.background = C.cardH,
+        onMouseLeave: e => e.currentTarget.style.background = C.card
+      }, isAITarget && /*#__PURE__*/React.createElement("div", {
+        style: {
+          position: 'absolute',
+          top: 7,
+          right: 8,
+          fontSize: 6,
+          fontWeight: 700,
+          letterSpacing: '0.12em',
+          color: C.sage,
+          opacity: .75
+        }
+      }, "AI"), /*#__PURE__*/React.createElement("div", {
+        style: {
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: 12
+        }
+      }, /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: 7,
+          fontWeight: 700,
+          letterSpacing: '0.3em',
+          color: C.muted,
+          textTransform: 'uppercase'
+        }
+      }, kpi.label), /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: 7,
+          fontWeight: 600,
+          letterSpacing: '0.1em',
+          color: badgeColor,
+          marginRight: isAITarget ? 10 : 0
+        }
+      }, badge)), isEdit ? /*#__PURE__*/React.createElement("input", {
+        type: "number",
+        autoFocus: true,
+        value: editVal,
+        onChange: e => setEditVal(e.target.value),
+        onBlur: () => commitEdit(kpi.id, editVal),
+        onKeyDown: e => {
+          if (e.key === 'Enter') commitEdit(kpi.id, editVal);
+          if (e.key === 'Escape') setEditing(null);
+        },
+        style: {
+          background: 'transparent',
+          border: 'none',
+          borderBottom: `1px solid ${C.white}`,
+          color: C.text,
+          fontSize: 28,
+          fontWeight: 200,
+          fontFamily: 'Montserrat,sans-serif',
+          width: '100%',
+          outline: 'none',
+          letterSpacing: '-0.02em',
+          marginBottom: 14,
+          padding: 0
+        }
+      }) : /*#__PURE__*/React.createElement("div", {
+        onClick: () => {
+          if (!isPH) {
+            setEditing(kpi.id);
+            setEditVal(String(v));
+          }
+        },
+        title: !isPH ? 'Click to update' : '',
+        style: {
+          fontSize: v >= 10000 ? 22 : 28,
+          fontWeight: 200,
+          color: ach ? C.white : C.text,
+          letterSpacing: '-0.02em',
+          lineHeight: 1,
+          marginBottom: 4,
+          cursor: isPH ? 'default' : 'pointer',
+          userSelect: 'none'
+        }
+      }, isPH ? '—' : fmt(v)), history.length >= 2 && !isEdit && /*#__PURE__*/React.createElement(Spark, {
+        history: history,
+        id: kpi.id
+      }), /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: 8,
+          color: C.muted,
+          letterSpacing: '0.1em',
+          margin: '8px 0 14px',
+          textTransform: 'uppercase'
+        }
+      }, kpi.sub, tgt && !isPH && /*#__PURE__*/React.createElement("span", {
+        style: {
+          color: C.whiteDim
+        }
+      }, " / ", fmt(tgt))), tgt && !isPH && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+        style: {
+          height: 2,
+          background: C.canopy,
+          position: 'relative',
+          marginBottom: 7
+        }
+      }, /*#__PURE__*/React.createElement("div", {
+        style: {
+          position: 'absolute',
+          left: 0,
+          top: 0,
+          height: '100%',
+          width: `${p}%`,
+          background: ach ? C.white : C.sage,
+          transition: 'width .4s ease'
+        }
+      }), [25, 50, 75].map(t => /*#__PURE__*/React.createElement("div", {
+        key: t,
+        style: {
+          position: 'absolute',
+          left: `${t}%`,
+          top: -3,
+          width: 1,
+          height: 8,
+          background: C.bg,
+          opacity: .9
+        }
+      }))), /*#__PURE__*/React.createElement("div", {
+        style: {
+          display: 'flex',
+          justifyContent: 'space-between',
+          marginBottom: 9
+        }
+      }, /*#__PURE__*/React.createElement("span", {
+        style: {
+          fontSize: 9,
+          fontWeight: 700,
+          letterSpacing: '0.04em',
+          color: ach ? C.white : C.muted
+        }
+      }, p, "%"), st && /*#__PURE__*/React.createElement("span", {
+        style: {
+          fontSize: 7,
+          fontWeight: 700,
+          letterSpacing: '0.2em',
+          color: st.color
+        }
+      }, st.label))), kpi.deadline && !isPH && /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: 8,
+          color: C.muted,
+          letterSpacing: '0.06em'
+        }
+      }, kpi.deadline), isPH && /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: 8,
+          color: C.whiteDim,
+          letterSpacing: '0.1em',
+          marginTop: 8
+        }
+      }, "CONNECT WAVE API"));
+    })));
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginBottom: 32
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 10,
+      marginBottom: 12
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 8,
+      fontWeight: 700,
+      letterSpacing: '0.4em',
+      color: C.sage
+    }
+  }, "TRENDS"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      height: 1,
+      background: C.border
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      gap: 1,
+      background: C.border
+    }
+  }, ['weekly', 'monthly', 'quarterly'].map(v => /*#__PURE__*/React.createElement("button", {
+    key: v,
+    onClick: () => setTrendView(v),
+    style: {
+      fontSize: 7,
+      fontWeight: 700,
+      letterSpacing: '0.15em',
+      padding: '5px 10px',
+      background: trendView === v ? C.canopy : C.card,
+      color: trendView === v ? C.text : C.muted,
+      textTransform: 'uppercase',
+      border: 'none',
+      outline: 'none',
+      cursor: 'pointer',
+      fontFamily: 'Montserrat,sans-serif'
+    }
+  }, v.slice(0, 2).toUpperCase())))), history.length > 0 ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: C.card,
+      padding: '16px',
+      borderTop: `1px solid ${C.border}`,
+      overflowX: 'auto'
+    }
+  }, /*#__PURE__*/React.createElement(TrendChart, {
+    data: trendData,
+    isBar: trendView === 'quarterly'
+  })), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      gap: 1,
+      background: C.border,
+      marginTop: 1
+    }
+  }, (() => {
+    const mo = buildMonthly(history),
+      qt = buildQuarterly(history);
+    return [{
+      label: 'THIS MONTH',
+      val: mo.length ? `${mo[mo.length - 1].score}%` : '—'
+    }, {
+      label: 'LAST MONTH',
+      val: mo.length > 1 ? `${mo[mo.length - 2].score}%` : '—'
+    }, {
+      label: 'THIS QTR',
+      val: qt.length ? `${qt[qt.length - 1].score}%` : '—'
+    }, {
+      label: 'PEAK WEEK',
+      val: history.length ? `${Math.max(...history.map(h => h.score))}%` : '—'
+    }].map(it => /*#__PURE__*/React.createElement("div", {
+      key: it.label,
+      style: {
+        flex: 1,
+        background: C.card,
+        padding: '12px 10px',
+        textAlign: 'center'
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 7,
+        color: C.muted,
+        letterSpacing: '0.2em',
+        marginBottom: 5
+      }
+    }, it.label), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 18,
+        fontWeight: 200,
+        color: it.val === '—' ? C.muted : C.white
+      }
+    }, it.val)));
+  })())) : /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: C.card,
+      borderTop: `1px solid ${C.border}`,
+      padding: '36px 24px',
+      textAlign: 'center'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 9,
+      color: C.muted,
+      letterSpacing: '0.2em',
+      marginBottom: 6
+    }
+  }, "HIT \"SAVE THIS WEEK\" TO START BUILDING TRENDS"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 8,
+      color: C.muted,
+      letterSpacing: '0.1em',
+      opacity: .6
+    }
+  }, "Weekly · Monthly · Quarterly views build automatically"))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginBottom: 32
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 10,
+      marginBottom: 12
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 8,
+      fontWeight: 700,
+      letterSpacing: '0.4em',
+      color: C.sage
+    }
+  }, "AI TARGETS"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      height: 1,
+      background: C.border
+    }
+  }), aiTgtCount > 0 && /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 8,
+      color: C.sage,
+      letterSpacing: '0.1em',
+      marginRight: 8,
+      opacity: .8
+    }
+  }, aiTgtCount, " ACTIVE"), /*#__PURE__*/React.createElement("button", {
+    onClick: generateTargets,
+    disabled: tgtLoading,
+    className: "no-print",
+    style: {
+      fontSize: 8,
+      fontWeight: 700,
+      letterSpacing: '0.2em',
+      padding: '6px 16px',
+      background: 'transparent',
+      color: tgtLoading ? C.muted : C.sage,
+      border: `1px solid ${tgtLoading ? C.canopy : C.border}`,
+      outline: 'none',
+      cursor: tgtLoading ? 'default' : 'pointer',
+      fontFamily: 'Montserrat,sans-serif',
+      transition: 'all .2s',
+      whiteSpace: 'nowrap'
+    }
+  }, tgtLoading ? 'GENERATING…' : aiTgtCount ? 'REFRESH WITH AI' : 'GENERATE WITH AI')), tgtError && /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: C.card,
+      borderTop: `1px solid ${C.err}`,
+      padding: '14px 20px',
+      fontSize: 10,
+      color: C.err,
+      letterSpacing: '0.06em'
+    }
+  }, tgtError), tgtLoading && /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: C.card,
+      borderTop: `1px solid ${C.border}`,
+      padding: '36px 24px',
+      textAlign: 'center'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 9,
+      color: C.muted,
+      letterSpacing: '0.2em',
+      marginBottom: 6
+    }
+  }, "RESEARCHING BENCHMARKS…"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 8,
+      color: C.muted,
+      letterSpacing: '0.1em',
+      opacity: .6
+    }
+  }, "Claude is calibrating targets against your numbers and architecture industry standards")), tgtSugg && !tgtLoading && /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: C.card,
+      borderTop: `1px solid ${C.border}`
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: '16px 20px',
+      borderBottom: `1px solid ${C.border}`,
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      flexWrap: 'wrap',
+      gap: 12
+    }
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 8,
+      fontWeight: 700,
+      letterSpacing: '0.2em',
+      color: C.white,
+      marginBottom: 4
+    }
+  }, "AI TARGET SUGGESTIONS"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 8,
+      color: C.muted,
+      letterSpacing: '0.08em'
+    }
+  }, "Edit any number · accept individually or all at once · saved to Supabase")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      gap: 8
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: () => {
+      setTgtSugg(null);
+      setTgtEdits({});
+    },
+    style: {
+      fontSize: 8,
+      fontWeight: 600,
+      letterSpacing: '0.15em',
+      padding: '8px 14px',
+      background: 'transparent',
+      color: C.muted,
+      border: `1px solid ${C.border}`,
+      outline: 'none',
+      cursor: 'pointer',
+      fontFamily: 'Montserrat,sans-serif'
+    }
+  }, "DISMISS"), /*#__PURE__*/React.createElement("button", {
+    onClick: () => {
+      const toAccept = {};
+      KPIS.filter(k => !k.ph && tgtSugg[k.id]).forEach(k => {
+        toAccept[k.id] = tgtEdits[k.id] ?? tgtSugg[k.id].value;
+      });
+      acceptTargets(toAccept);
+    },
+    style: {
+      fontSize: 8,
+      fontWeight: 700,
+      letterSpacing: '0.2em',
+      padding: '8px 20px',
+      background: C.white,
+      color: C.whiteFnt,
+      border: 'none',
+      outline: 'none',
+      cursor: 'pointer',
+      fontFamily: 'Montserrat,sans-serif'
+    }
+  }, "ACCEPT ALL"))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      overflowX: 'auto'
+    }
+  }, /*#__PURE__*/React.createElement("table", {
+    style: {
+      width: '100%',
+      borderCollapse: 'collapse',
+      minWidth: 580
+    }
+  }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", {
+    style: {
+      borderBottom: `1px solid ${C.border}`
+    }
+  }, ['METRIC', 'NOW', 'CURRENT TARGET', 'AI SUGGESTS', 'TIMEFRAME', 'REASONING', ''].map((h, i) => /*#__PURE__*/React.createElement("th", {
+    key: i,
+    style: {
+      padding: '10px 14px',
+      fontSize: 7,
+      fontWeight: 700,
+      letterSpacing: '0.2em',
+      color: C.muted,
+      textAlign: i >= 1 && i <= 5 ? 'center' : 'left',
+      whiteSpace: 'nowrap'
+    }
+  }, h)))), /*#__PURE__*/React.createElement("tbody", null, KPIS.filter(k => !k.ph && tgtSugg[k.id]).map((kpi, i) => {
+    const sugg = tgtSugg[kpi.id];
+    const editedVal = tgtEdits[kpi.id] ?? sugg.value;
+    const current = getT(kpi.id);
+    const changed = sugg.value !== current;
+    return /*#__PURE__*/React.createElement("tr", {
+      key: kpi.id,
+      style: {
+        borderBottom: `1px solid ${C.border}`,
+        background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.015)'
+      }
+    }, /*#__PURE__*/React.createElement("td", {
+      style: {
+        padding: '12px 14px',
+        fontSize: 10,
+        color: C.text,
+        fontWeight: 500,
+        whiteSpace: 'nowrap'
+      }
+    }, kpi.label), /*#__PURE__*/React.createElement("td", {
+      style: {
+        padding: '12px 14px',
+        fontSize: 10,
+        color: C.muted,
+        textAlign: 'center'
+      }
+    }, fmt(vals[kpi.id] || 0)), /*#__PURE__*/React.createElement("td", {
+      style: {
+        padding: '12px 14px',
+        fontSize: 10,
+        color: C.muted,
+        textAlign: 'center'
+      }
+    }, current ? fmt(current) : '—'), /*#__PURE__*/React.createElement("td", {
+      style: {
+        padding: '12px 14px',
+        textAlign: 'center'
+      }
+    }, /*#__PURE__*/React.createElement("input", {
+      type: "number",
+      value: editedVal,
+      onChange: e => setTgtEdits(prev => ({
+        ...prev,
+        [kpi.id]: parseInt(e.target.value) || sugg.value
+      })),
+      style: {
+        background: 'transparent',
+        border: `1px solid ${changed ? C.borderM : C.border}`,
+        color: changed ? C.white : C.muted,
+        fontSize: 11,
+        fontWeight: changed ? 600 : 400,
+        fontFamily: 'Montserrat,sans-serif',
+        width: 72,
+        textAlign: 'center',
+        padding: '4px 6px',
+        outline: 'none'
+      }
+    })), /*#__PURE__*/React.createElement("td", {
+      style: {
+        padding: '12px 14px',
+        fontSize: 9,
+        color: C.muted,
+        textAlign: 'center',
+        whiteSpace: 'nowrap'
+      }
+    }, sugg.timeframe), /*#__PURE__*/React.createElement("td", {
+      style: {
+        padding: '12px 14px',
+        fontSize: 10,
+        color: C.muted,
+        maxWidth: 220,
+        lineHeight: 1.6
+      }
+    }, sugg.reasoning), /*#__PURE__*/React.createElement("td", {
+      style: {
+        padding: '12px 14px',
+        textAlign: 'center'
+      }
+    }, /*#__PURE__*/React.createElement("button", {
+      onClick: () => acceptTargets({
+        [kpi.id]: editedVal
+      }),
+      style: {
+        fontSize: 7,
+        fontWeight: 700,
+        letterSpacing: '0.15em',
+        padding: '5px 10px',
+        background: C.canopy,
+        color: C.text,
+        border: 'none',
+        outline: 'none',
+        cursor: 'pointer',
+        fontFamily: 'Montserrat,sans-serif',
+        whiteSpace: 'nowrap'
+      }
+    }, "APPLY")));
+  }))))), !tgtSugg && !tgtError && !tgtLoading && /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: C.card,
+      borderTop: `1px solid ${C.border}`,
+      padding: '24px',
+      textAlign: 'center'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 9,
+      color: C.muted,
+      letterSpacing: '0.2em',
+      marginBottom: 5
+    }
+  }, aiTgtCount ? `${aiTgtCount} AI TARGETS ACTIVE · CARDS MARKED WITH "AI" BADGE · CLICK REFRESH TO RECALIBRATE` : 'AI CALIBRATES TARGETS USING YOUR NUMBERS, STAGE & ARCHITECTURE INDUSTRY BENCHMARKS'), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 8,
+      color: C.muted,
+      letterSpacing: '0.1em',
+      opacity: .6,
+      marginTop: 4
+    }
+  }, "Targets save to Supabase · visible on any device · recalibrate anytime"))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginBottom: 32
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 10,
+      marginBottom: 12
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 8,
+      fontWeight: 700,
+      letterSpacing: '0.4em',
+      color: C.sage
+    }
+  }, "AI INSIGHTS"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      height: 1,
+      background: C.border
+    }
+  }), /*#__PURE__*/React.createElement("button", {
+    onClick: analyzeWithAI,
+    disabled: aiLoading,
+    className: "no-print",
+    style: {
+      fontSize: 8,
+      fontWeight: 700,
+      letterSpacing: '0.2em',
+      padding: '6px 16px',
+      background: aiLoading ? C.canopy : C.white,
+      color: aiLoading ? C.muted : C.whiteFnt,
+      border: 'none',
+      outline: 'none',
+      cursor: aiLoading ? 'default' : 'pointer',
+      fontFamily: 'Montserrat,sans-serif',
+      opacity: aiLoading ? 0.7 : 1,
+      transition: 'all .2s',
+      whiteSpace: 'nowrap'
+    }
+  }, aiLoading ? 'ANALYZING…' : aiDate ? 'REFRESH ANALYSIS' : 'ANALYZE WITH AI')), aiError && /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: C.card,
+      borderTop: `1px solid ${C.err}`,
+      padding: '16px 20px',
+      fontSize: 10,
+      color: C.err,
+      letterSpacing: '0.06em'
+    }
+  }, aiError), aiText && /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: C.card,
+      borderTop: `1px solid ${C.border}`,
+      padding: '28px 24px'
+    }
+  }, aiDate && /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 7,
+      color: C.muted,
+      letterSpacing: '0.2em',
+      marginBottom: 20
+    }
+  }, "GENERATED ", aiDate.toUpperCase(), " · CLAUDE AI"), aiText.split('\n').map((line, i) => {
+    if (line.startsWith('**') && line.endsWith('**') && line.length > 4) {
+      return /*#__PURE__*/React.createElement("div", {
+        key: i,
+        style: {
+          fontSize: 8,
+          fontWeight: 700,
+          letterSpacing: '0.3em',
+          color: C.white,
+          marginTop: i === 0 ? 0 : 24,
+          marginBottom: 10,
+          paddingBottom: 8,
+          borderBottom: `1px solid ${C.border}`
+        }
+      }, line.slice(2, -2).toUpperCase());
+    }
+    if (!line.trim()) return /*#__PURE__*/React.createElement("div", {
+      key: i,
+      style: {
+        height: 6
+      }
+    });
+    return /*#__PURE__*/React.createElement("div", {
+      key: i,
+      style: {
+        fontSize: 12,
+        color: C.text,
+        lineHeight: 1.75,
+        letterSpacing: '0.01em',
+        marginBottom: 2
+      }
+    }, line.replace(/\*\*/g, ''));
+  })), !aiText && !aiError && !aiLoading && /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: C.card,
+      borderTop: `1px solid ${C.border}`,
+      padding: '36px 24px',
+      textAlign: 'center'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 9,
+      color: C.muted,
+      letterSpacing: '0.2em',
+      marginBottom: 6
+    }
+  }, "CLICK \"ANALYZE WITH AI\" FOR YOUR WEEKLY STRATEGIC DEBRIEF"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 8,
+      color: C.muted,
+      letterSpacing: '0.1em',
+      opacity: .6
+    }
+  }, "Powered by Claude · knows your business, stage, and goals")), aiLoading && /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: C.card,
+      borderTop: `1px solid ${C.border}`,
+      padding: '36px 24px',
+      textAlign: 'center'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 9,
+      color: C.muted,
+      letterSpacing: '0.2em',
+      marginBottom: 6
+    }
+  }, "READING YOUR NUMBERS…"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 8,
+      color: C.muted,
+      letterSpacing: '0.1em',
+      opacity: .6
+    }
+  }, "Claude is analyzing your KPIs against your business stage"))), /*#__PURE__*/React.createElement("div", {
+    className: "no-print",
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 8,
+      paddingTop: 16,
+      borderTop: `1px solid ${C.border}`,
+      flexWrap: 'wrap'
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: saveSnap,
+    style: {
+      fontSize: 9,
+      fontWeight: 700,
+      letterSpacing: '0.22em',
+      padding: '11px 22px',
+      background: C.white,
+      color: C.whiteFnt,
+      border: 'none',
+      outline: 'none',
+      minWidth: 160,
+      cursor: 'pointer',
+      fontFamily: 'Montserrat,sans-serif',
+      transition: 'filter .15s'
+    },
+    onMouseEnter: e => e.currentTarget.style.filter = 'brightness(0.9)',
+    onMouseLeave: e => e.currentTarget.style.filter = ''
+  }, snapMsg || 'SAVE THIS WEEK'), /*#__PURE__*/React.createElement("button", {
+    onClick: copySnap,
+    style: {
+      fontSize: 9,
+      fontWeight: 700,
+      letterSpacing: '0.22em',
+      padding: '11px 18px',
+      background: 'transparent',
+      border: `1px solid ${C.border}`,
+      color: C.muted,
+      outline: 'none',
+      cursor: 'pointer',
+      fontFamily: 'Montserrat,sans-serif',
+      transition: 'all .15s'
+    },
+    onMouseEnter: e => {
+      e.currentTarget.style.borderColor = C.borderM;
+      e.currentTarget.style.color = C.sage;
+    },
+    onMouseLeave: e => {
+      e.currentTarget.style.borderColor = C.border;
+      e.currentTarget.style.color = C.muted;
+    }
+  }, copyMsg || 'COPY SNAPSHOT'), /*#__PURE__*/React.createElement("button", {
+    onClick: () => window.print(),
+    style: {
+      fontSize: 9,
+      fontWeight: 700,
+      letterSpacing: '0.22em',
+      padding: '11px 18px',
+      background: 'transparent',
+      border: `1px solid ${C.border}`,
+      color: C.muted,
+      outline: 'none',
+      cursor: 'pointer',
+      fontFamily: 'Montserrat,sans-serif',
+      transition: 'all .15s'
+    },
+    onMouseEnter: e => {
+      e.currentTarget.style.borderColor = C.borderM;
+      e.currentTarget.style.color = C.sage;
+    },
+    onMouseLeave: e => {
+      e.currentTarget.style.borderColor = C.border;
+      e.currentTarget.style.color = C.muted;
+    }
+  }, "SAVE AS PDF"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 8,
+      color: C.muted,
+      letterSpacing: '0.08em',
+      textAlign: 'right',
+      opacity: .7
+    }
+  }, "PF = Postflow · CU = ClickUp · AI badge = AI-calibrated target · click any number to update")));
 }
-
-ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+ReactDOM.createRoot(document.getElementById('root')).render(/*#__PURE__*/React.createElement(App, null));
 </script>
 </body>
 </html>
