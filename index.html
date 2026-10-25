@@ -183,23 +183,40 @@ const KPIS = [{
   deadline: 'By Issue 6',
   src: 'manual'
 }, {
-  id: 'revenue',
+  id: 'arena_mrr',
   s: 'FINANCIAL',
-  label: 'Revenue',
-  sub: 'Monthly (USD)',
+  label: 'AREna MRR',
+  sub: 'Monthly recurring',
   defaultTarget: null,
   deadline: null,
-  src: 'wave',
-  ph: true
+  src: 'db',
+  currency: true
 }, {
-  id: 'invoices',
+  id: 'arena_subs',
+  s: 'FINANCIAL',
+  label: 'AREna Subs',
+  sub: 'Active subscribers',
+  defaultTarget: 10,
+  deadline: 'Year end 2026',
+  src: 'db'
+}, {
+  id: 'revenue_mtd',
+  s: 'FINANCIAL',
+  label: 'Cash In MTD',
+  sub: 'Architecture / month',
+  defaultTarget: null,
+  deadline: null,
+  src: 'db',
+  currency: true
+}, {
+  id: 'outstanding_ar',
   s: 'FINANCIAL',
   label: 'Outstanding',
-  sub: 'Invoices (USD)',
+  sub: 'Invoices AR',
   defaultTarget: null,
   deadline: null,
-  src: 'wave',
-  ph: true
+  src: 'db',
+  currency: true
 }];
 const SECS = {
   REACH: {
@@ -220,7 +237,7 @@ const SECS = {
   },
   FINANCIAL: {
     label: 'FINANCIAL',
-    desc: 'Wave API — connect to activate'
+    desc: 'Bogat OS · synced Sundays'
   }
 };
 const SEED = {
@@ -240,10 +257,16 @@ const SEED = {
   portfolio: 0,
   proposals: 0,
   newsletter: 0,
-  revenue: 0,
-  invoices: 0
+  arena_mrr: 0,
+  arena_subs: 0,
+  revenue_mtd: 0,
+  outstanding_ar: 0
 };
 const fmt = v => (v || 0).toLocaleString('en-US');
+const fmtCurrency = v => '$' + (v || 0).toLocaleString('en-US', {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2
+});
 const pct = (v, t) => t ? Math.min(Math.round(v / t * 100), 100) : null;
 const avg = arr => arr.length ? Math.round(arr.reduce((s, v) => s + v, 0) / arr.length) : 0;
 function statusOf(v, t) {
@@ -793,13 +816,11 @@ function App() {
     }
   }, "%"))))), Object.keys(SECS).map(sk => {
     const sec = SECS[sk],
-      secKpis = KPIS.filter(k => k.s === sk),
-      isDim = sk === 'FINANCIAL';
+      secKpis = KPIS.filter(k => k.s === sk);
     return /*#__PURE__*/React.createElement("div", {
       key: sk,
       style: {
-        marginBottom: 32,
-        opacity: isDim ? 0.55 : 1
+        marginBottom: 32
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
@@ -813,7 +834,7 @@ function App() {
         fontSize: 8,
         fontWeight: 700,
         letterSpacing: '0.4em',
-        color: isDim ? C.muted : C.sage
+        color: C.sage
       }
     }, sec.label), /*#__PURE__*/React.createElement("div", {
       style: {
@@ -843,8 +864,8 @@ function App() {
       const ach = tgt && v >= tgt,
         isEdit = editing === kpi.id,
         isPH = !!kpi.ph;
-      const badge = kpi.src === 'pf' ? 'PF' : kpi.src === 'cu' ? 'CU' : kpi.src === 'wave' ? 'WAVE' : '';
-      const badgeColor = isPH ? C.whiteDim : kpi.src === 'cu' || kpi.src === 'pf' ? C.sage : C.muted;
+      const badge = kpi.src === 'pf' ? 'PF' : kpi.src === 'cu' ? 'CU' : kpi.src === 'db' ? 'DB' : '';
+      const badgeColor = kpi.src === 'cu' || kpi.src === 'pf' ? C.sage : kpi.src === 'db' ? C.sage : C.muted;
       const isAITarget = targets[kpi.id] != null;
       return /*#__PURE__*/React.createElement("div", {
         key: kpi.id,
@@ -917,12 +938,12 @@ function App() {
         }
       }) : /*#__PURE__*/React.createElement("div", {
         onClick: () => {
-          if (!isPH) {
+          if (!kpi.currency && kpi.src !== 'db') {
             setEditing(kpi.id);
             setEditVal(String(v));
           }
         },
-        title: !isPH ? 'Click to update' : '',
+        title: !kpi.currency && kpi.src !== 'db' ? 'Click to update' : '',
         style: {
           fontSize: v >= 10000 ? 22 : 28,
           fontWeight: 200,
@@ -930,10 +951,10 @@ function App() {
           letterSpacing: '-0.02em',
           lineHeight: 1,
           marginBottom: 4,
-          cursor: isPH ? 'default' : 'pointer',
+          cursor: kpi.currency || kpi.src === 'db' ? 'default' : 'pointer',
           userSelect: 'none'
         }
-      }, isPH ? '—' : fmt(v)), history.length >= 2 && !isEdit && /*#__PURE__*/React.createElement(Spark, {
+      }, kpi.currency ? fmtCurrency(v) : fmt(v)), history.length >= 2 && !isEdit && /*#__PURE__*/React.createElement(Spark, {
         history: history,
         id: kpi.id
       }), /*#__PURE__*/React.createElement("div", {
@@ -1002,14 +1023,7 @@ function App() {
           color: C.muted,
           letterSpacing: '0.06em'
         }
-      }, kpi.deadline), isPH && /*#__PURE__*/React.createElement("div", {
-        style: {
-          fontSize: 8,
-          color: C.whiteDim,
-          letterSpacing: '0.1em',
-          marginTop: 8
-        }
-      }, "CONNECT WAVE API"));
+      }, kpi.deadline));
     })));
   }), /*#__PURE__*/React.createElement("div", {
     style: {
