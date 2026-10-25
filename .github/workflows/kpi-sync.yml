@@ -12,12 +12,14 @@ jobs:
       - name: Sync ClickUp → Supabase
         env:
           CLICKUP_API_KEY: ${{ secrets.CLICKUP_API_KEY }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: |
           node << 'EOF'
           // ── CONFIG ──────────────────────────────────────────
-          const CU_KEY = process.env.CLICKUP_API_KEY;
-          const SB_URL = 'https://btmxozmpzpxisrczlkop.supabase.co';
-          const SB_KEY = 'sb_publishable_bv2-JYq4lde4PzvbIBBcIQ_etwTkf1z';
+          const CU_KEY  = process.env.CLICKUP_API_KEY;
+          const SB_URL  = 'https://btmxozmpzpxisrczlkop.supabase.co';
+          const SB_KEY  = 'sb_publishable_bv2-JYq4lde4PzvbIBBcIQ_etwTkf1z';  // anon (dashboard read)
+          const SB_SVC  = process.env.SUPABASE_SERVICE_KEY;                    // service (financial read/write)
 
           // Social account task IDs (Postflow writes followers here)
           const SOCIAL = {
@@ -111,43 +113,75 @@ jobs:
             const active_proj = (riveraTasks.tasks?.filter(t => !statusIs(t, 'closed', 'complete')).length ?? 0) > 0 ? 1 : 0;
             console.log(`  active_proj: ${active_proj}`);
 
+            // ── Financial KPIs from Bogat OS (Supabase) ──
+            const sbHeaders = { apikey: SB_SVC, Authorization: `Bearer ${SB_SVC}` };
+
+            // AREna MRR + subscriber count
+            const arenaRes = await fetch(
+              `${SB_URL}/rest/v1/arena_subscriptions?status=eq.active&counts_toward_mrr=eq.true&is_test=eq.false&select=monthly_amount`,
+              { headers: sbHeaders }
+            );
+            const arenaRows = await arenaRes.json();
+            const arena_subs = arenaRows.length;
+            const arena_mrr  = arenaRows.reduce((s, r) => s + parseFloat(r.monthly_amount || 0), 0);
+            console.log(`  arena_subs: ${arena_subs}, arena_mrr: ${arena_mrr.toFixed(2)}`);
+
+            // Architecture cash collected MTD (no trucking, no dragan)
+            const monthStart = new Date(); monthStart.setDate(1); monthStart.setHours(0,0,0,0);
+            const monthStartStr = monthStart.toISOString().slice(0,10);
+            const incomeRes = await fetch(
+              `${SB_URL}/rest/v1/mar_os_finance_transactions?category=eq.__income__&trucking=eq.false&dragan=eq.false&date=gte.${monthStartStr}&select=amount`,
+              { headers: sbHeaders }
+            );
+            const incomeRows = await incomeRes.json();
+            const revenue_mtd = incomeRows.reduce((s, r) => s + parseFloat(r.amount || 0), 0);
+            console.log(`  revenue_mtd: ${revenue_mtd.toFixed(2)}`);
+
+            // Outstanding AR (sent invoices, not paid/draft/voided/cancelled)
+            const arRes = await fetch(
+              `${SB_URL}/rest/v1/invoices?status=not.in.(paid,draft,voided,cancelled)&is_test=eq.false&select=total_amount,paid_amount`,
+              { headers: sbHeaders }
+            );
+            const arRows = await arRes.json();
+            const outstanding_ar = arRows.reduce((s, r) => s + parseFloat(r.total_amount||0) - parseFloat(r.paid_amount||0), 0);
+            console.log(`  outstanding_ar: ${outstanding_ar.toFixed(2)}`);
+
             // ── Build vals, merge into Supabase (preserve manual fields) ──
             const newVals = {
               ...followers,
-              posts_sch,
-              posts_pub,
-              blog,
-              press,
-              leads,
-              proposals,
-              active_proj,
+              posts_sch, posts_pub, blog, press, leads, proposals, active_proj,
+              arena_mrr: Math.round(arena_mrr * 100) / 100,
+              arena_subs,
+              revenue_mtd: Math.round(revenue_mtd * 100) / 100,
+              outstanding_ar: Math.round(outstanding_ar * 100) / 100,
             };
 
             console.log('\nFinal vals:', JSON.stringify(newVals));
 
-            // Read current row to preserve manual fields (convs, portfolio, newsletter, revenue, invoices)
+            // Read current row to preserve manual fields (convs, portfolio, newsletter)
             const getRes = await fetch(`${SB_URL}/rest/v1/kpi_data?id=eq.bogat&select=vals`, {
-              headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}` }
+              headers: { apikey: SB_SVC, Authorization: `Bearer ${SB_SVC}` }
             });
             const rows = await getRes.json();
-            const existing = rows[0]?.vals ?? {};
-            const merged = { ...existing, ...newVals };
+            const existing = rows[0];
+            const merged = { ...(existing?.vals ?? {}), ...newVals };
 
-            // Write back
-            const patchRes = await fetch(`${SB_URL}/rest/v1/kpi_data?id=eq.bogat`, {
-              method: 'PATCH',
-              headers: {
-                apikey: SB_KEY,
-                Authorization: `Bearer ${SB_KEY}`,
-                'Content-Type': 'application/json',
-                Prefer: 'return=minimal',
-              },
-              body: JSON.stringify({ vals: merged, synced_at: new Date().toISOString() }),
-            });
+            // UPSERT: insert if no row exists, update if it does
+            const writeRes = existing
+              ? await fetch(`${SB_URL}/rest/v1/kpi_data?id=eq.bogat`, {
+                  method: 'PATCH',
+                  headers: { apikey: SB_SVC, Authorization: `Bearer ${SB_SVC}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+                  body: JSON.stringify({ vals: merged, synced_at: new Date().toISOString() }),
+                })
+              : await fetch(`${SB_URL}/rest/v1/kpi_data`, {
+                  method: 'POST',
+                  headers: { apikey: SB_SVC, Authorization: `Bearer ${SB_SVC}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+                  body: JSON.stringify({ id: 'bogat', vals: merged, synced_at: new Date().toISOString() }),
+                });
 
-            if (!patchRes.ok) {
-              const err = await patchRes.text();
-              throw new Error(`Supabase PATCH failed: ${err}`);
+            if (!writeRes.ok) {
+              const err = await writeRes.text();
+              throw new Error(`Supabase write failed: ${err}`);
             }
 
             console.log('\n✓ Supabase updated successfully');
